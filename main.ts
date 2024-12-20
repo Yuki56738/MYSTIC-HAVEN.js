@@ -22,7 +22,7 @@ client.on('ready', async e => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
     if (interaction.commandName === 'ping'){
-        logger(`Ping command hit.`, false)
+        logger(`Ping command hit.q`, false)
         await interaction.reply('Pong!');
         return
     }

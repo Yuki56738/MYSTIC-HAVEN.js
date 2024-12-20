@@ -47,8 +47,8 @@ client.on('interactionCreate', async interaction => {
                 logger('Error: Channel ID is null or undefined.', true);
                 return;
             }
-
             logger(`Channel ID retrieved: ${channel_id}`, false);
+            return
         }catch (e) {
             logger(`Error: ${e}`, true)
         }

@@ -1,0 +1,16 @@
+{
+  "name": "notify_user_join_vc",
+  "version": "1.0.0",
+  "description": "",
+  "license": "BSD-3-Clause",
+  "author": "Yuki Ito",
+  "type": "commonjs",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7"
+  }
+}

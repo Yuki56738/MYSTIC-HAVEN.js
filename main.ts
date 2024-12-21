@@ -1,11 +1,18 @@
 import {PrismaClient} from "@prisma/client";
-import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel, MessageManager} from 'discord.js';
+import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 'discord.js';
 import { logger } from './modules/logger'
 import dotenv from "dotenv";
 import { ChannelType } from 'discord.js';
+'use strict'
+import * as log4 from 'log4js';
 
 dotenv.config();
 
+log4.configure({
+    appenders: { out: { type: 'stdout' } }, //type = console??
+    categories: { default: { appenders: ['out'], level: 'info' } }
+});
+const log4js = log4.getLogger();
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 
@@ -37,7 +44,11 @@ commands.push(commandDebug.toJSON());
 client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger(`Logged in as: ${client.user?.tag}`, false)
-    await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
+    if (!TEST_GUILD_ID) {
+        logger('Error: TEST_GUILD_ID is undefined.', true);
+        return;
+    }
+    await client.guilds.fetch(TEST_GUILD_ID).then(async guild => {
         await guild.commands.set(commands);
     })
 });
@@ -92,7 +103,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         logger(`Get channel command hit.`, false)
         try{
             await interaction.deferReply()
-            const guild = await client.guilds.fetch(interaction.guildId!)
+            // const guild = await client.guilds.fetch(interaction.guildId!)
             logger('Attempting to connect to database.', false)
             const prisma = new PrismaClient()
             // const allSettings = await prisma.settings.findMany()

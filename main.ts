@@ -1,18 +1,18 @@
 import {PrismaClient} from "@prisma/client";
 import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 'discord.js';
-import { logger } from './modules/logger'
+// import { logger } from './modules/logger'
 import dotenv from "dotenv";
 import { ChannelType } from 'discord.js';
-'use strict'
-import * as log4 from 'log4js';
+import log4js from 'log4js';
 
 dotenv.config();
 
-log4.configure({
-    appenders: { out: { type: 'stdout' } }, //type = console??
-    categories: { default: { appenders: ['out'], level: 'info' } }
-});
-const log4js = log4.getLogger();
+// log4js.configure({
+//     appenders: { out: { type: 'console' } }, //type = console??
+//     file: {type: 'file', filename: 'application.log' },
+//     categories: { default: { appenders: ['out'], level: 'info' } }
+// })
+const logger2 = log4js.getLogger();
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 

@@ -19,6 +19,7 @@
     "typescript": "^5.7.2"
   },
   "devDependencies": {
+    "@types/log4js": "^0.0.33",
     "prisma": "^6.1.0"
   }
 }

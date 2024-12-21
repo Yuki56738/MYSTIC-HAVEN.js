@@ -11,11 +11,20 @@ dotenv.config();
 log4js.configure({
     appenders: {
         console: { type: 'console' }, // コンソール出力
+        file: { type: 'file', filename: 'logs/bot.log' }, // ファイル出力 (オプション)
     },
     categories: {
-        default: { appenders: ['console'], level: 'info' },
+        default: { appenders: ['console', 'file'], level: 'info' }, // デフォルトカテゴリ
     },
 });
+// log4js.configure({
+//     appenders: {
+//         console: { type: 'console' }, // コンソール出力
+//     },
+//     categories: {
+//         default: { appenders: ['console'], level: 'info' },
+//     },
+// });
 
 // ロガーのインスタンス作成
 const logger = log4js.getLogger();

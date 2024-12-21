@@ -22,6 +22,8 @@ log4js.configure({
     },
 });
 
+const logger = log4js.getLogger()
+
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 

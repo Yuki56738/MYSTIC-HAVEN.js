@@ -4,7 +4,7 @@ import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 
 import dotenv from "dotenv";
 import { ChannelType } from 'discord.js';
 import log4js from 'log4js';
-import {logger} from "./modules/logger";
+import {yukilogger} from "./modules/yukilogger";
 
 dotenv.config();
 
@@ -57,9 +57,9 @@ commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
-    logger(`Logged in as: ${client.user?.tag}`, false)
+    yukilogger(`Logged in as: ${client.user?.tag}`, false)
     if (!TEST_GUILD_ID) {
-        logger('Error: TEST_GUILD_ID is undefined.', true);
+        yukilogger('Error: TEST_GUILD_ID is undefined.', true);
         return;
     }
     await client.guilds.fetch(TEST_GUILD_ID).then(async guild => {
@@ -71,30 +71,30 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isCommand()) return;
 
     if (interaction.commandName === 'ping'){
-        logger(`Ping command hit.`, false)
+        yukilogger(`Ping command hit.`, false)
         try {
             await interaction.reply('Pong!');
         }catch (e) {
-            logger(`Error: ${e}`, true)
+            yukilogger(`Error: ${e}`, true)
         }
         return
     }
     if (interaction.commandName === 'setchannel'){
-        logger(`Set channel command hit.`, false)
+        yukilogger(`Set channel command hit.`, false)
         try{
             // @ts-ignore
             const channel_id: string = interaction.options.getString('channel');
             if (!channel_id) {
-                logger('Error: Channel ID is null or undefined.', true);
+                yukilogger('Error: Channel ID is null or undefined.', true);
                 return;
             }
-            logger(`Channel ID retrieved: ${channel_id}`, false);
+            yukilogger(`Channel ID retrieved: ${channel_id}`, false);
             try {
-                logger(`Attempting to connect to database.`, false)
+                yukilogger(`Attempting to connect to database.`, false)
                 const guild = await client.guilds.fetch(interaction.guildId!)
                 const prisma = new PrismaClient()
                const allSettings =  await prisma.settings.findMany()
-                logger(`All settings: ${allSettings}`, false)
+                yukilogger(`All settings: ${allSettings}`, false)
                 await prisma.settings.upsert({
                     where: {guild_id: BigInt(interaction.guildId!)},
                     update: {},
@@ -106,28 +106,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 await prisma.$disconnect()
                 return
             }catch (e) {
-                logger(`Error: ${e}`, true)
+                yukilogger(`Error: ${e}`, true)
             }
             return
         }catch (e) {
-            logger(`Error: ${e}`, true)
+            yukilogger(`Error: ${e}`, true)
         }
     }
     if (interaction.commandName === 'getchannel'){
-        logger(`Get channel command hit.`, false)
+        yukilogger(`Get channel command hit.`, false)
         try{
             await interaction.deferReply()
             // const guild = await client.guilds.fetch(interaction.guildId!)
-            logger('Attempting to connect to database.', false)
+            yukilogger('Attempting to connect to database.', false)
             const prisma = new PrismaClient()
             // const allSettings = await prisma.settings.findMany()
             // logger(`All settings: ${allSettings}`, false)
             const allSettings = await prisma.settings.findMany()
-            logger(`All settings: ${allSettings}`, false)
+            yukilogger(`All settings: ${allSettings}`, false)
             for (const setting of allSettings) {
                 if (setting.guild_id === BigInt(interaction.guildId!)){
-                    logger(`Channel ID retrieved: ${setting.channel_for_notify}`, false)
-                    logger(`setting: ${setting}`, false)
+                    yukilogger(`Channel ID retrieved: ${setting.channel_for_notify}`, false)
+                    yukilogger(`setting: ${setting}`, false)
                     await interaction.followUp(`Channel ID retrieved: ${setting.channel_for_notify}`)
                     // await client.channels.fetch(interaction.channelId).then(async (channel) => {
                     //     await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
@@ -139,25 +139,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await prisma.$disconnect()
             return
         }catch (e) {
-            logger(`Error: ${e}`, true)
+            yukilogger(`Error: ${e}`, true)
         }
     }
     if (interaction.commandName === 'setchannelwithgui'){
-        logger(`Set channel with GUI command hit.`, false)
+        yukilogger(`Set channel with GUI command hit.`, false)
         try{
             // @ts-ignore
             const logChannel: TextChannel = await interaction.options.getChannel('channel')
-            logger(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`, false)
+            yukilogger(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`, false)
             if (logChannel.type !== ChannelType.GuildText){
-                logger(`Error: Channel is not a text channel.`, true)
+                yukilogger(`Error: Channel is not a text channel.`, true)
 
                 return
             }
-            logger(`Attempting to connect to database.`, false)
+            yukilogger(`Attempting to connect to database.`, false)
             const guild = await client.guilds.fetch(interaction.guildId!)
             const prisma = new PrismaClient()
             const allSettings =  await prisma.settings.findMany()
-            logger(`All settings: ${allSettings}`, false)
+            yukilogger(`All settings: ${allSettings}`, false)
             await prisma.settings.upsert({
                 where: {guild_id: BigInt(interaction.guildId!)},
                 update: {},
@@ -169,7 +169,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await prisma.$disconnect()
             return
         }catch (e) {
-            logger(`Error: ${e}`, true)
+            yukilogger(`Error: ${e}`, true)
         }
     }
 })

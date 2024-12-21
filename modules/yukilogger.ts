@@ -1,7 +1,10 @@
-import Log4js from 'log4js';
+const log4js = require('log4js');
+const logger = log4js.getLogger();
+logger.level = 'debug';
 
-export function logger(message: string, isError: boolean) {}
+export function yukilogger(message: string, isError: boolean) {}
 // ロガー設定
+'use strict'
 log4js.configure({
     appenders: {
         console: { type: 'console' }, // コンソール出力

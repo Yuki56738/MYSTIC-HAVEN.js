@@ -12,7 +12,16 @@ dotenv.config();
 //     file: {type: 'file', filename: 'application.log' },
 //     categories: { default: { appenders: ['out'], level: 'info' } }
 // })
-const logger2 = log4js.getLogger();
+log4js.configure({
+    appenders: {
+        console: { type: 'console' }, // コンソール出力
+        file: { type: 'file', filename: 'logs/bot.log' }, // ファイル出力
+    },
+    categories: {
+        default: { appenders: ['console', 'file'], level: 'info' }, // デフォルトカテゴリ
+    },
+});
+
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 

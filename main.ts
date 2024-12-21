@@ -2,6 +2,7 @@ import {PrismaClient} from "@prisma/client";
 import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel, MessageManager} from 'discord.js';
 import { logger } from './modules/logger'
 import dotenv from "dotenv";
+import { ChannelType } from 'discord.js';
 
 dotenv.config();
 
@@ -23,15 +24,19 @@ const commandGetChannel = new SlashCommandBuilder()
     .setDescription('Gets the channel to log to.');
 const commandSetChannelWithGUI = new SlashCommandBuilder()
     .setName('setchannelwithgui')
-    .setDescription('Sets the channel to log to with GUI.');
+    .setDescription('Sets the channel to log to with GUI.')
+    .addChannelOption(option => option.setName('channel').setDescription('The channel to log to.').setRequired(true))
+const commandDebug = new SlashCommandBuilder()
+    .setName('debug')
+    .setDescription('Debugs the bot.')
 commands.push(commandPing.toJSON());
 commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
+commands.push(commandDebug.toJSON());
 client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger(`Logged in as: ${client.user?.tag}`, false)
-    // await e.application?.commands.set(commands);
     await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
         await guild.commands.set(commands);
     })
@@ -98,11 +103,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 if (setting.guild_id === BigInt(interaction.guildId!)){
                     logger(`Channel ID retrieved: ${setting.channel_for_notify}`, false)
                     logger(`setting: ${setting}`, false)
-                    await interaction.editReply(`Channel ID retrieved: ${setting.channel_for_notify}`)
-                    await client.channels.fetch(interaction.channelId).then(async (channel) => {
-                        await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
-                    })
-
+                    await interaction.followUp(`Channel ID retrieved: ${setting.channel_for_notify}`)
+                    // await client.channels.fetch(interaction.channelId).then(async (channel) => {
+                    //     await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
+                    // })
                     break
                 }
             }
@@ -116,10 +120,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === 'setchannelwithgui'){
         logger(`Set channel with GUI command hit.`, false)
         try{
-            await interaction.deferReply()
-            await client.channels.fetch(interaction.channelId).then(async (channel) => {
-                // await (channel as TextChannel).send()
+            // @ts-ignore
+            const logChannel: TextChannel = await interaction.options.getChannel('channel')
+            logger(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`, false)
+            if (logChannel.type !== ChannelType.GuildText){
+                logger(`Error: Channel is not a text channel.`, true)
+
+                return
+            }
+            logger(`Attempting to connect to database.`, false)
+            const guild = await client.guilds.fetch(interaction.guildId!)
+            const prisma = new PrismaClient()
+            const allSettings =  await prisma.settings.findMany()
+            logger(`All settings: ${allSettings}`, false)
+            await prisma.settings.upsert({
+                where: {guild_id: BigInt(interaction.guildId!)},
+                update: {},
+                create: {guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    channel_for_notify: logChannel.id.toString()}
             })
+            await prisma.$disconnect()
+            return
         }catch (e) {
             logger(`Error: ${e}`, true)
         }

@@ -29,7 +29,7 @@ client.on('ready', async e => {
     })
 });
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isCommand()) return;
 
     if (interaction.commandName === 'ping'){
@@ -53,19 +53,19 @@ client.on(Events.InteractionCreate, async interaction => {
             logger(`Channel ID retrieved: ${channel_id}`, false);
             try {
                 logger(`Attempting to connect to database.`, false)
+                const guild = await client.guilds.fetch(interaction.guildId!)
                 const prisma = new PrismaClient()
-                const allSetGuildId = await prisma.notifyvc.findMany()
-                logger(`All set guilds: ${allSetGuildId}`, false)
-                // allSetGuildId.forEach(async guild => {
-                //     if (guild.guild_id !== interaction.guildId!.toString()){
-                //         await prisma.notifyvc.upsert()
-                //     }
-                // })
-                // await prisma.notifyvc.upsert({
-                //     where: {},
-                //     update:{},
-                //     create: {guild_id: interaction.guildId!.toString(), set_channel: channel_id}
-                // })
+               const allSettings =  await prisma.settings.findMany()
+                logger(`All settings: ${allSettings}`, false)
+                await prisma.settings.upsert({
+                    where: {guild_id: BigInt(interaction.guildId!)},
+                    update: {},
+                    create: {guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    channel_for_notify: channel_id!}
+                })
+                await prisma.$disconnect()
             }catch (e) {
                 logger(`Error: ${e}`, true)
             }

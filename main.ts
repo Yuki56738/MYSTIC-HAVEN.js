@@ -13,6 +13,7 @@ dotenv.config();
 //     file: {type: 'file', filename: 'application.log' },
 //     categories: { default: { appenders: ['out'], level: 'info' } }
 // })
+/*
 log4js.configure({
     appenders: {
         console: { type: 'console' }, // コンソール出力
@@ -24,6 +25,7 @@ log4js.configure({
 });
 
 const logger_log4js = log4js.getLogger()
+*/
 
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;

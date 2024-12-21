@@ -1,7 +1,7 @@
 import {PrismaClient} from "@prisma/client";
 
 const dotenv = require('dotenv');
-import {Client, IntentsBitField, SlashCommandBuilder, Interaction, Events} from 'discord.js';
+import {Client, IntentsBitField, SlashCommandBuilder, Events} from 'discord.js';
 import { logger } from './modules/logger'
 dotenv.config();
 
@@ -11,15 +11,19 @@ const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 const client = new Client({intents: IntentsBitField.Flags.Guilds});
 
 let commands = [];
-const comandPing= new SlashCommandBuilder()
+const commandPing= new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Replies with Pong!');
 const commandSetChannel = new SlashCommandBuilder()
     .setName('setchannel')
     .setDescription('Sets the channel to log to.')
     .addStringOption(option => option.setName('channel').setDescription('The channel to log to with channel ID.').setRequired(true));
-commands.push(comandPing.toJSON());
+const commandGetChannel = new SlashCommandBuilder()
+    .setName('getchannel')
+    .setDescription('Gets the channel to log to.');
+commands.push(commandPing.toJSON());
 commands.push(commandSetChannel.toJSON());
+commands.push(commandGetChannel.toJSON());
 client.on('ready', async e => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger(`Logged in as: ${client.user?.tag}`, false)
@@ -29,7 +33,7 @@ client.on('ready', async e => {
     })
 });
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isCommand()) return;
 
     if (interaction.commandName === 'ping'){
@@ -53,22 +57,45 @@ client.on(Events.InteractionCreate, async interaction => {
             logger(`Channel ID retrieved: ${channel_id}`, false);
             try {
                 logger(`Attempting to connect to database.`, false)
+                const guild = await client.guilds.fetch(interaction.guildId!)
                 const prisma = new PrismaClient()
-                const allSetGuildId = await prisma.notifyvc.findMany()
-                logger(`All set guilds: ${allSetGuildId}`, false)
-                // allSetGuildId.forEach(async guild => {
-                //     if (guild.guild_id !== interaction.guildId!.toString()){
-                //         await prisma.notifyvc.upsert()
-                //     }
-                // })
-                // await prisma.notifyvc.upsert({
-                //     where: {},
-                //     update:{},
-                //     create: {guild_id: interaction.guildId!.toString(), set_channel: channel_id}
-                // })
+               const allSettings =  await prisma.settings.findMany()
+                logger(`All settings: ${allSettings}`, false)
+                await prisma.settings.upsert({
+                    where: {guild_id: BigInt(interaction.guildId!)},
+                    update: {},
+                    create: {guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    channel_for_notify: channel_id!}
+                })
+                await prisma.$disconnect()
+                return
             }catch (e) {
                 logger(`Error: ${e}`, true)
             }
+            return
+        }catch (e) {
+            logger(`Error: ${e}`, true)
+        }
+    }
+    if (interaction.commandName === 'getchannel'){
+        logger(`Get channel command hit.`, false)
+        try{
+            const guild = await client.guilds.fetch(interaction.guildId!)
+            logger('Attempting to connect to database.', false)
+            const prisma = new PrismaClient()
+            // const allSettings = await prisma.settings.findMany()
+            // logger(`All settings: ${allSettings}`, false)
+            const allSettings = await prisma.settings.findMany()
+            logger(`All settings: ${allSettings}`, false)
+            allSettings.forEach(async (setting) => {
+                if (setting.guild_id === BigInt(interaction.guildId!)){
+                    logger(`Channel ID retrieved: ${setting.channel_for_notify}`, false)
+                }
+            })
+
+            await prisma.$disconnect()
             return
         }catch (e) {
             logger(`Error: ${e}`, true)

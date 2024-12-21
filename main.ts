@@ -24,7 +24,7 @@ const commandGetChannel = new SlashCommandBuilder()
 commands.push(commandPing.toJSON());
 commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
-client.on('ready', async e => {
+client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger(`Logged in as: ${client.user?.tag}`, false)
     // await e.application?.commands.set(commands);
@@ -98,7 +98,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     await client.channels.fetch(interaction.channelId).then(async (channel) => {
                         await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
                     })
-                    
+
                     break
                 }
             }

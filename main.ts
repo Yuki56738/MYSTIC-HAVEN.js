@@ -136,11 +136,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
             // const allSettings = await prisma.settings.findMany()
             // logger(`All settings: ${allSettings}`)
             const allSettings = await prisma.settings.findMany()
-            yukilogger(`All settings: ${allSettings}`)
+            logger.debug(`All settings: ${allSettings}`)
             for (const setting of allSettings) {
                 if (setting.guild_id === BigInt(interaction.guildId!)){
-                    yukilogger(`Channel ID retrieved: ${setting.channel_for_notify}`)
-                    yukilogger(`setting: ${setting}`)
+                    logger.debug(`Channel ID retrieved: ${setting.channel_for_notify}`)
+                    logger.debug(`setting: ${setting}`)
                     await interaction.followUp(`Channel ID retrieved: ${setting.channel_for_notify}`)
                     // await client.channels.fetch(interaction.channelId).then(async (channel) => {
                     //     await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
@@ -152,25 +152,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await prisma.$disconnect()
             return
         }catch (e) {
-            yukilogger(`Error: ${e}`, true)
+            logger.error(`Error: ${e}`)
         }
     }
     if (interaction.commandName === 'setchannelwithgui'){
-        yukilogger(`Set channel with GUI command hit.`)
+        logger.debug(`Set channel with GUI command hit.`)
         try{
             // @ts-ignore
             const logChannel: TextChannel = await interaction.options.getChannel('channel')
-            yukilogger(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`)
+            logger.debug(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`)
             if (logChannel.type !== ChannelType.GuildText){
-                yukilogger(`Error: Channel is not a text channel.`, true)
+                logger.error(`Error: Channel is not a text channel.`)
 
                 return
             }
-            yukilogger(`Attempting to connect to database.`)
+            logger.debug(`Attempting to connect to database.`)
             const guild = await client.guilds.fetch(interaction.guildId!)
             const prisma = new PrismaClient()
             const allSettings =  await prisma.settings.findMany()
-            yukilogger(`All settings: ${allSettings}`)
+            logger.debug(`All settings: ${allSettings}`)
             await prisma.settings.upsert({
                 where: {guild_id: BigInt(interaction.guildId!)},
                 update: {},
@@ -182,7 +182,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await prisma.$disconnect()
             return
         }catch (e) {
-            yukilogger(`Error: ${e}`, true)
+            logger.error(`Error: ${e}`)
         }
     }
 })

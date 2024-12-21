@@ -5,8 +5,6 @@ import { ChannelType } from 'discord.js';
 'use strict'
 const log4js = require('log4js');
 
-
-
 dotenv.config();
 log4js.configure({
     appenders: {
@@ -17,37 +15,10 @@ log4js.configure({
         default: { appenders: ['console', 'file'], level: 'info' }, // デフォルトカテゴリ
     },
 });
-// log4js.configure({
-//     appenders: {
-//         console: { type: 'console' }, // コンソール出力
-//     },
-//     categories: {
-//         default: { appenders: ['console'], level: 'info' },
-//     },
-// });
 
 // ロガーのインスタンス作成
 const logger = log4js.getLogger();
 logger.level = 'debug';
-
-// log4js.configure({
-//     appenders: { out: { type: 'console' } }, //type = console??
-//     file: {type: 'file', filename: 'application.log' },
-//     categories: { default: { appenders: ['out'], level: 'info' } }
-// })
-/*
-log4js.configure({
-    appenders: {
-        console: { type: 'console' }, // コンソール出力
-        file: { type: 'file', filename: 'logs/bot.log' }, // ファイル出力
-    },
-    categories: {
-        default: { appenders: ['console', 'file'], level: 'info' }, // デフォルトカテゴリ
-    },
-});
-
-const logger_log4js = log4js.getLogger()
-*/
 
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
@@ -151,9 +122,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     logger.debug(`Channel ID retrieved: ${setting.channel_for_notify}`)
                     logger.debug(`setting: ${setting}`)
                     await interaction.followUp(`Channel ID retrieved: ${setting.channel_for_notify}`)
-                    // await client.channels.fetch(interaction.channelId).then(async (channel) => {
-                    //     await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
-                    // })
                     break
                 }
             }

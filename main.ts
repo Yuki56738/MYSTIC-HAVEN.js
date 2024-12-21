@@ -93,10 +93,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
             for (const setting of allSettings) {
                 if (setting.guild_id === BigInt(interaction.guildId!)){
                     logger(`Channel ID retrieved: ${setting.channel_for_notify}`, false)
+                    logger(`setting: ${setting}`, false)
                     await interaction.editReply(`Channel ID retrieved: ${setting.channel_for_notify}`)
                     await client.channels.fetch(interaction.channelId).then(async (channel) => {
                         await (channel as TextChannel).send(`Channel name: ${(channel as TextChannel).name}`)
                     })
+                    
                     break
                 }
             }

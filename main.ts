@@ -1,5 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 'discord.js';
+import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel, MessageManager} from 'discord.js';
 import { logger } from './modules/logger'
 import dotenv from "dotenv";
 
@@ -21,9 +21,13 @@ const commandSetChannel = new SlashCommandBuilder()
 const commandGetChannel = new SlashCommandBuilder()
     .setName('getchannel')
     .setDescription('Gets the channel to log to.');
+const commandSetChannelWithGUI = new SlashCommandBuilder()
+    .setName('setchannelwithgui')
+    .setDescription('Sets the channel to log to with GUI.');
 commands.push(commandPing.toJSON());
 commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
+commands.push(commandSetChannelWithGUI.toJSON());
 client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger(`Logged in as: ${client.user?.tag}`, false)
@@ -105,6 +109,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             await prisma.$disconnect()
             return
+        }catch (e) {
+            logger(`Error: ${e}`, true)
+        }
+    }
+    if (interaction.commandName === 'setchannelwithgui'){
+        logger(`Set channel with GUI command hit.`, false)
+        try{
+            await interaction.deferReply()
+            await client.channels.fetch(interaction.channelId).then(async (channel) => {
+                // await (channel as TextChannel).send()
+            })
         }catch (e) {
             logger(`Error: ${e}`, true)
         }

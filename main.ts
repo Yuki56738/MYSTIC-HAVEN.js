@@ -4,6 +4,7 @@ import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 
 import dotenv from "dotenv";
 import { ChannelType } from 'discord.js';
 import log4js from 'log4js';
+import {logger} from "./modules/logger";
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ log4js.configure({
     },
 });
 
-const logger = log4js.getLogger()
+const logger_log4js = log4js.getLogger()
 
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;

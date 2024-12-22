@@ -1,18 +1,10 @@
 import {PrismaClient} from "@prisma/client";
-import {
-    Client,
-    IntentsBitField,
-    SlashCommandBuilder,
-    Events,
-    TextChannel,
-    Interaction,
-    PermissionOverwrites, VoiceState
-} from 'discord.js';
+import {ChannelType, Client, Events, IntentsBitField, SlashCommandBuilder, TextChannel, VoiceState} from 'discord.js';
 import * as dotenv from "dotenv";
-import {ChannelType} from 'discord.js';
+
+import log4js from "log4js";
 
 'use strict'
-const log4js = require('log4js');
 if (process.env.NODE_ENV === 'dev') {
     dotenv.config()
 }
@@ -88,7 +80,7 @@ client.on('ready', async () => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === 'ping') {
         logger.debug(`Ping command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
@@ -129,11 +121,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
         try {
             await interaction.deferReply()
             // @ts-ignore
-            const logChannel = await interaction.options.getChannel('channel')
-            const logChannelObj = await client.channels.fetch(logChannel.id) as TextChannel
+            const logChannel = interaction.options.getChannel('channel')
+            const logChannelObj = await client.channels.fetch(logChannel!.id) as TextChannel
             logger.debug(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})`)
             await interaction.editReply(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})...`)
-            if (logChannel.type !== ChannelType.GuildText) {
+            if (logChannel?.type !== ChannelType.GuildText) {
                 logger.error(`Error: Channel is not a text channel.`)
                 await interaction.followUp(`エラー。ボイスチャンネルは指定できません！`)
                 return
@@ -179,78 +171,76 @@ client.on(Events.InteractionCreate, async (interaction) => {
         try {
             // @ts-ignore
             const vc = interaction.options.getChannel('voice_channel')
-            logger.debug(`vc: ${vc.id}`)
-            await interaction.editReply(`vc: ${vc.toString()}`
-        )
-                    return
-                } catch (e) {
-                    logger.error(
-            `Error: ${e}`
-        )
-                }
-            }
-        })
-
-        client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-            logger.debug(
-            `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`
-        )
-            const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
-            if (newState.channelId !== undefined) {
-                if (newState.channelId === CREATE_VC) {
-                    try {
-                        // const member = newState.guild.members.cache.get(newState.member?.id!)
-                        const member = newState.member
-                        const createdChannel = await newState.guild?.channels.create({
-                            name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
-                            type: ChannelType.GuildVoice,
-                            parent: newState.channel?.parent,
-                        });
-
-                        // @ts-ignore
-                        await prisma.vCS.upsert({
-                            //@ts-ignore
-                            where: {
-                                vc_id: createdChannel.id,
-                            },
-                            update: {
-                                vc_id: createdChannel.id,
-                                guild_id: createdChannel.guildId,
-                                member_id: newState.member?.id,
-                                vc_name: createdChannel.name,
-                            },
-                            create: {
-                                vc_id: createdChannel.id,
-                                guild_id: createdChannel.guildId,
-                                member_id: newState.member?.id!,
-                                vc_name: createdChannel.name,
-                            }
-                        })
-                        // const db_vcs = await prisma.vCS.findFirst({
-                        //     where: {vc_id: createdChannel.id}
-                        // })
-                        // if (db_vcs?.vc_id === undefined) {
-                        //     db_vcs.vc_id
-                        // }
-                        /*
-                        const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
-                        if (db_vcs){
-
-
-                        }
-        */
-                        await prisma.vCS
-                    } catch (e) {
-                        logger.error(
-            `Error: ${e}`
-        )
-                    }
-                }
-            }
-        })
-
-        client.login(TOKEN).catch(e => {
+            logger.debug(`vc: ${vc?.id}`)
+            await interaction.editReply(`vc: ${vc?.toString()}`)
+            return
+        } catch (e) {
             logger.error(
-            `Error: ${e}`
-        )
-        })
+                `Error: ${e}`
+            )
+        }
+    }
+})
+
+client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
+    logger.debug(
+        `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`
+    )
+    const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+    if (newState.channelId !== undefined) {
+        if (newState.channelId === CREATE_VC) {
+            try {
+                // const member = newState.guild.members.cache.get(newState.member?.id!)
+                const member = newState.member
+                const createdChannel = await newState.guild?.channels.create({
+                    name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
+                    type: ChannelType.GuildVoice,
+                    parent: newState.channel?.parent,
+                });
+
+                // @ts-ignore
+                await prisma.vCS.upsert({
+                    //@ts-ignore
+                    where: {
+                        vc_id: createdChannel.id,
+                    },
+                    update: {
+                        vc_id: createdChannel.id,
+                        guild_id: createdChannel.guildId,
+                        member_id: newState.member?.id,
+                        vc_name: createdChannel.name,
+                    },
+                    create: {
+                        vc_id: createdChannel.id,
+                        guild_id: createdChannel.guildId,
+                        member_id: newState.member?.id!,
+                        vc_name: createdChannel.name,
+                    }
+                })
+                // const db_vcs = await prisma.vCS.findFirst({
+                //     where: {vc_id: createdChannel.id}
+                // })
+                // if (db_vcs?.vc_id === undefined) {
+                //     db_vcs.vc_id
+                // }
+                /*
+                const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
+                if (db_vcs){
+
+
+                }
+*/
+            } catch (e) {
+                logger.error(
+                    `Error: ${e}`
+                )
+            }
+        }
+    }
+})
+
+client.login(TOKEN).catch(e => {
+    logger.error(
+        `Error: ${e}`
+    )
+})

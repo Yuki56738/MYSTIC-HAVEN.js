@@ -102,6 +102,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 logger.debug(`Channel for notify: ${channelForNotifyObj.name} (${channelForNotifyObj.id})`);
             } else {
                 logger.debug(`No setting found for guild ID ${guildId}`);
+                await interaction.editReply('このサーバーに設定がありません。')
             }
             await prisma.$disconnect()
         } catch (e) {

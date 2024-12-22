@@ -8,12 +8,11 @@ import {
     Interaction,
     PermissionOverwrites
 } from 'discord.js';
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import {ChannelType} from 'discord.js';
 
 'use strict'
 const log4js = require('log4js');
-
 dotenv.config();
 log4js.configure({
     appenders: {
@@ -32,7 +31,7 @@ logger.level = 'debug';
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 
-const client = new Client({intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions});
+const client = new Client({intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent});
 
 let commands = [];
 const commandPing = new SlashCommandBuilder()
@@ -40,7 +39,7 @@ const commandPing = new SlashCommandBuilder()
     .setDescription('Replies with Pong!');
 const commandGetChannel = new SlashCommandBuilder()
     .setName('getchannel')
-    .setDescription('Gets the channel to log to.');
+    .setDescription('募集版として設定されたチャンネルを確認する。');
 const commandSetChannelWithGUI = new SlashCommandBuilder()
     .setName('setchannel')
     .setDescription('募集版を設定します。')
@@ -78,7 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isCommand()) return;
 
     if (interaction.commandName === 'ping') {
-        logger.debug(`Ping command hit.`)
+        logger.debug(`Ping command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
             await interaction.reply('Pong!');
         } catch (e) {
@@ -162,4 +161,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 })
 
-client.login(TOKEN);
+client.login(TOKEN).catch(e => {
+    logger.error(`Error: ${e}`)
+})

@@ -1,5 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel} from 'discord.js';
+import {Client, IntentsBitField, SlashCommandBuilder, Events, TextChannel, Interaction} from 'discord.js';
 import dotenv from "dotenv";
 import {ChannelType} from 'discord.js';
 
@@ -52,7 +52,8 @@ commands.push(commandDebug.toJSON());
 client.on('ready', async () => {
     // console.log(`Logged in as ${client.user?.tag}!`);
     logger.info(`Logged in as: ${client.user?.tag}`)
-    logger.info('Connecting to discord...')
+
+    // logger.info('Connecting to discord...')
     if (process.env.RAILWAY_ENVIRONMENT_NAME !== 'production') {
         // logger.info('Production environment detected. Disabling debug commands.')
         // logger.info('Production environment. Deploying commands to global....')
@@ -63,7 +64,7 @@ client.on('ready', async () => {
         await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
             await guild.commands.set(commands);
         })
-    }else {
+    } else {
         logger.info('Production environment detected. Deploying commands to global....')
         await client.application?.commands.set(commands);
     }
@@ -96,8 +97,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 logger.info(`Attempting to connect to database.`)
                 const guild = await client.guilds.fetch(interaction.guildId!)
                 const prisma = new PrismaClient()
-                const allSettings = await prisma.settings.findMany()
-                logger.debug(`All settings: ${allSettings}`)
+                // const allSettings = await prisma.settings.findMany()
+                // logger.debug(`All settings: ${allSettings}`)
                 await prisma.settings.upsert({
                     where: {guild_id: BigInt(interaction.guildId!)},
                     update: {},
@@ -109,14 +110,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     }
                 })
                 await prisma.$disconnect()
-                return
             } catch (e) {
                 logger.error(`Error: ${e}`)
             }
-            return
         } catch (e) {
             logger.error(`Error: ${e}`)
         }
+        return
+
     }
     if (interaction.commandName === 'getchannel') {
         logger.debug(`Get channel command hit.`)
@@ -127,22 +128,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const prisma = new PrismaClient()
             // const allSettings = await prisma.settings.findMany()
             // logger(`All settings: ${allSettings}`)
-            const allSettings = await prisma.settings.findMany()
-            logger.debug(`All settings: ${allSettings}`)
-            for (const setting of allSettings) {
-                if (setting.guild_id === BigInt(interaction.guildId!)) {
-                    logger.debug(`Channel ID retrieved: ${setting.channel_for_notify}`)
-                    logger.debug(`setting: ${setting}`)
-                    await interaction.followUp(`Channel ID retrieved: ${setting.channel_for_notify}`)
-                    break
-                }
+            const allSettings = await prisma.settings.findMany({where: {guild_id: BigInt(interaction.guildId!)}})
+            logger.debug(`All settings: ${allSettings.map(setting => setting.channel_for_notify).join(', ')}`)
+            if (allSettings.length > 0) {
+                await interaction.editReply(`Channel ID retrieved: ${allSettings[0].channel_for_notify}`)
+            } else {
+                await interaction.editReply(`No settings found for this guild.`)
+                await prisma.$disconnect()
             }
-
-            await prisma.$disconnect()
-            return
         } catch (e) {
             logger.error(`Error: ${e}`)
         }
+        return
+
     }
     if (interaction.commandName === 'setchannelwithgui') {
         logger.debug(`Set channel with GUI command hit.`)
@@ -171,10 +169,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 }
             })
             await prisma.$disconnect()
-            return
         } catch (e) {
             logger.error(`Error: ${e}`)
         }
+        return
+
     }
 })
 

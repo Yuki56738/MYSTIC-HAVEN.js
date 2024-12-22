@@ -144,12 +144,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === 'setchannelwithgui') {
         logger.debug(`Set channel with GUI command hit.`)
         try {
+            await interaction.deferReply()
             // @ts-ignore
             const logChannel: TextChannel = await interaction.options.getChannel('channel')
             logger.debug(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`)
             if (logChannel.type !== ChannelType.GuildText) {
                 logger.error(`Error: Channel is not a text channel.`)
-
+                await interaction.editReply(`Error: Channel is not a text channel.`)
+                await interaction.followUp('Hello!')
                 return
             }
             logger.debug(`Attempting to connect to database.`)

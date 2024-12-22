@@ -151,7 +151,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
             if (logChannel.type !== ChannelType.GuildText) {
                 logger.error(`Error: Channel is not a text channel.`)
                 await interaction.editReply(`Error: Channel is not a text channel.`)
-                await interaction.followUp('Hello!')
                 return
             }
             logger.debug(`Attempting to connect to database.`)

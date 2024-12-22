@@ -207,7 +207,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                     where: {
                         vc_id: createdChannel.id,
                     },
-                    update:{
+                    update: {
                         vc_id: createdChannel.id,
                         guild_id: createdChannel.guildId,
                         member_id: newState.member?.id

@@ -198,7 +198,18 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
                     type: ChannelType.GuildVoice,
                     parent: newState.channel?.parent,
                 });
+                const prisma = new PrismaClient()
+                // const db_vcs = await prisma.vCS.findFirst({
+                //     where: {vc_id: BigInt(createdChannel.id)}
+                // })
+                /*
+                const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
+                if (db_vcs){
 
+
+                }
+*/
+                await prisma.vCS
             }catch (e) {
                 logger.error(`Error: ${e}`)
             }

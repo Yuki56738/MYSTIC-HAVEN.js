@@ -25,24 +25,8 @@ model Settings {
 }
 
 model VCS {
-  id        Int      @id @default(autoincrement())
-  vc_id     BigInt   @unique @db.BigInt
-  member_id String   @db.Text
-  guild_id  String   @db.Text
-  // vcs       VCS      @relation(fields: [vc_id], references: [id])
-  // VCS       VCS?
-  VCSModel  VCSModel @relation(fields: [vc_id], references: [id])
+  id        Int    @id @default(autoincrement())
+  member_id String @db.Text
+  guild_id  String @db.Text
+  vc_id     String @db.Text
 }
-
-model VCSModel {
-  id BigInt @id @default(autoincrement())
-  // VCSModel VCSModel[]
-
-  VCS VCS[]
-}
-
-// model VCID {
-//   id         Int         @id @default(autoincrement())
-// ... other fields
-// someModels SomeModel[] @relation(name: "vcRelationship") // Use the same name on the inverse side
-// }

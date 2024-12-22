@@ -13,7 +13,10 @@ import {ChannelType} from 'discord.js';
 
 'use strict'
 const log4js = require('log4js');
-dotenv.config();
+if (process.env.NODE_ENV === 'dev') {
+    dotenv.config()
+}
+// dotenv.config()
 log4js.configure({
     appenders: {
         console: {type: 'console'}, // コンソール出力
@@ -31,7 +34,8 @@ logger.level = 'debug';
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 
-const client = new Client({intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates});
+const client = new Client({intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates | IntentsBitField.Flags.GuildMembers | IntentsBitField.Flags.GuildModeration
+});
 
 let commands = [];
 const commandPing = new SlashCommandBuilder()
@@ -47,11 +51,18 @@ const commandSetChannelWithGUI = new SlashCommandBuilder()
 const commandDebug = new SlashCommandBuilder()
     .setName('debug')
     .setDescription('Debugs the bot.')
+const commandSetVC = new SlashCommandBuilder()
+    .setName('setvc')
+    .setDescription('ボイチャ作成用チャンネルの指定.')
+    .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
+commands.push(commandSetVC.toJSON());
+
+
 client.on('ready', async () => {
     logger.info(`Logged in as: ${client.user?.tag}`)
     logger.info(`Connecting to following guilds:`)
@@ -160,18 +171,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return
 
     }
+    if (interaction.commandName === 'setvc'){
+        logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
+        await interaction.deferReply()
+        try{
+            const vc = interaction.options.data
+            logger.debug(`vc: ${vc.toString()}`)
+            await interaction.editReply(`vc: ${vc.toString()}`)
+            return
+        }catch(e){
+            logger.error(`Error: ${e}`)
+        }
+    }
 })
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     logger.debug(`VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`)
+    const CREATE_VC = process.env.CREATE_VC ||  '1316107393343553719'
+    if (newState.channelId !== undefined) {
+        if (newState.channelId === CREATE_VC) {
+            try{
+                // const member = newState.guild.members.cache.get(newState.member?.id!)
+                const member = newState.member
+                const createdChannel = await newState.guild?.channels.create({
+                    name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
+                    type: ChannelType.GuildVoice,
+                    parent: newState.channel?.parent,
+                });
 
-    if (oldState.channel?.id === newState.channel?.id) {
-        logger.debug(`oldState.channel.id === newState.channel.id`)
-        return
-    }
-    if (!oldState.channel) {
-        logger.debug(`oldState.channel is null`)
-        return
+            }catch (e) {
+                logger.error(`Error: ${e}`)
+            }
+        }
     }
 })
 

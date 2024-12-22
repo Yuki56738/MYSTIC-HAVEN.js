@@ -8,18 +8,41 @@ datasource db {
 }
 
 model guildsettings {
-  id          BigInt @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
-  guild_id    BigInt @db.BigInt @unique
-  Settings    Settings  @relation(fields: [guild_id], references: [id])
+  id       BigInt   @id @unique(map: "id") @default(autoincrement()) @db.UnsignedBigInt
+  guild_id BigInt   @unique @db.BigInt
+  Settings Settings @relation(fields: [guild_id], references: [id])
   // set_channel BigInt @db.BigInt
 }
+
 model Settings {
-  id        BigInt  @id @default(autoincrement())
-  channel_for_notify  String? @db.Text
-  guild_id  BigInt?  @db.BigInt @unique
-  set_user_id BigInt
-  guild_name String @db.Text
+  id                 BigInt  @id @default(autoincrement())
+  channel_for_notify String? @db.Text
+  guild_id           BigInt? @unique @db.BigInt
+  set_user_id        BigInt
+  guild_name         String  @db.Text
 
   guildsettings guildsettings[]
 }
 
+model VCS {
+  id        Int      @id @default(autoincrement())
+  vc_id     BigInt   @unique @db.BigInt
+  member_id String   @db.Text
+  guild_id  String   @db.Text
+  // vcs       VCS      @relation(fields: [vc_id], references: [id])
+  // VCS       VCS?
+  VCSModel  VCSModel @relation(fields: [vc_id], references: [id])
+}
+
+model VCSModel {
+  id BigInt @id @default(autoincrement())
+  // VCSModel VCSModel[]
+
+  VCS VCS[]
+}
+
+// model VCID {
+//   id         Int         @id @default(autoincrement())
+// ... other fields
+// someModels SomeModel[] @relation(name: "vcRelationship") // Use the same name on the inverse side
+// }

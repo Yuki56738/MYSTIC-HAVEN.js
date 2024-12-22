@@ -30,17 +30,17 @@ let commands = [];
 const commandPing = new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Replies with Pong!');
-const commandSetChannel = new SlashCommandBuilder()
-    .setName('setchannel')
-    .setDescription('Sets the channel to log to.')
-    .addStringOption(option => option.setName('channel').setDescription('The channel to log to with channel ID.').setRequired(true));
+// const commandSetChannel = new SlashCommandBuilder()
+//     .setName('setchannel')
+//     .setDescription('Sets the channel to log to.')
+//     .addStringOption(option => option.setName('channel').setDescription('The channel to log to with channel ID.').setRequired(true));
 const commandGetChannel = new SlashCommandBuilder()
     .setName('getchannel')
     .setDescription('Gets the channel to log to.');
 const commandSetChannelWithGUI = new SlashCommandBuilder()
-    .setName('setchannelwithgui')
-    .setDescription('Sets the channel to log to with GUI.')
-    .addChannelOption(option => option.setName('channel').setDescription('The channel to log to.').setRequired(true))
+    .setName('setchannel')
+    .setDescription('募集版を設定します。')
+    .addChannelOption(option => option.setName('channel').setDescription('募集版').setRequired(true))
 const commandDebug = new SlashCommandBuilder()
     .setName('debug')
     .setDescription('Debugs the bot.')
@@ -82,42 +82,42 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
         return
     }
-    if (interaction.commandName === 'setchannel') {
-        logger.debug(`Set channel command hit.`)
-        try {
-            // @ts-ignore
-            const channel_id: string = interaction.options.getString('channel');
-            if (!channel_id) {
-                logger.error('Error: Channel ID is null or undefined.');
-                return;
-            }
-            logger.debug(`Channel ID retrieved: ${channel_id}`);
-            try {
-                logger.info(`Attempting to connect to database.`)
-                const guild = await client.guilds.fetch(interaction.guildId!)
-                const prisma = new PrismaClient()
-                // const allSettings = await prisma.settings.findMany()
-                // logger.debug(`All settings: ${allSettings}`)
-                await prisma.settings.upsert({
-                    where: {guild_id: BigInt(interaction.guildId!)},
-                    update: {},
-                    create: {
-                        guild_id: BigInt(interaction.guildId!),
-                        guild_name: guild.name!,
-                        set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: channel_id!
-                    }
-                })
-                await prisma.$disconnect()
-            } catch (e) {
-                logger.error(`Error: ${e}`)
-            }
-        } catch (e) {
-            logger.error(`Error: ${e}`)
-        }
-        return
-
-    }
+    // if (interaction.commandName === 'setchannel') {
+    //     logger.debug(`Set channel command hit.`)
+    //     try {
+    //         // @ts-ignore
+    //         const channel_id: string = interaction.options.getString('channel');
+    //         if (!channel_id) {
+    //             logger.error('Error: Channel ID is null or undefined.');
+    //             return;
+    //         }
+    //         logger.debug(`Channel ID retrieved: ${channel_id}`);
+    //         try {
+    //             logger.info(`Attempting to connect to database.`)
+    //             const guild = await client.guilds.fetch(interaction.guildId!)
+    //             const prisma = new PrismaClient()
+    //             // const allSettings = await prisma.settings.findMany()
+    //             // logger.debug(`All settings: ${allSettings}`)
+    //             await prisma.settings.upsert({
+    //                 where: {guild_id: BigInt(interaction.guildId!)},
+    //                 update: {},
+    //                 create: {
+    //                     guild_id: BigInt(interaction.guildId!),
+    //                     guild_name: guild.name!,
+    //                     set_user_id: BigInt(interaction.user.id!),
+    //                     channel_for_notify: channel_id!
+    //                 }
+    //             })
+    //             await prisma.$disconnect()
+    //         } catch (e) {
+    //             logger.error(`Error: ${e}`)
+    //         }
+    //     } catch (e) {
+    //         logger.error(`Error: ${e}`)
+    //     }
+    //     return
+    //
+    // }
     if (interaction.commandName === 'getchannel') {
         logger.debug(`Get channel command hit.`)
         try {
@@ -141,7 +141,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return
 
     }
-    if (interaction.commandName === 'setchannelwithgui') {
+    if (interaction.commandName === 'setchannel') {
         logger.debug(`Set channel with GUI command hit.`)
         try {
             await interaction.deferReply()
@@ -150,7 +150,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             logger.debug(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`)
             if (logChannel.type !== ChannelType.GuildText) {
                 logger.error(`Error: Channel is not a text channel.`)
-                await interaction.editReply(`Error: Channel is not a text channel.`)
+                await interaction.editReply(`エラー。ボイスチャンネルは指定できません！`)
                 return
             }
             logger.debug(`Attempting to connect to database.`)
@@ -169,6 +169,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 }
             })
             await prisma.$disconnect()
+            await interaction.editReply(`募集版を ${logChannel.name} に設定しました。`)
         } catch (e) {
             logger.error(`Error: ${e}`)
         }

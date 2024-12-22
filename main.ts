@@ -50,13 +50,12 @@ commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 client.on('ready', async () => {
-    // console.log(`Logged in as ${client.user?.tag}!`);
     logger.info(`Logged in as: ${client.user?.tag}`)
-
-    // logger.info('Connecting to discord...')
+    logger.info(`Connecting to following guilds:`)
+    client.guilds.cache.forEach( (guild) => {
+        logger.info(`- ${guild.name}`);
+    })
     if (process.env.RAILWAY_ENVIRONMENT_NAME !== 'production') {
-        // logger.info('Production environment detected. Disabling debug commands.')
-        // logger.info('Production environment. Deploying commands to global....')
         logger.info('dev environment detected. Deploying commands to guild....')
         if (!TEST_GUILD_ID) {
             logger.error('Error: TEST_GUILD_ID is undefined.');

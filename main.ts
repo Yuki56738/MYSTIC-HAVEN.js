@@ -87,7 +87,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return
     }
     if (interaction.commandName === 'getchannel') {
-        logger.debug(`Get channel command hit.`)
+        logger.debug(`getchannel command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
             await interaction.deferReply()
             logger.info('Attempting to connect to database.')
@@ -112,7 +112,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     }
     if (interaction.commandName === 'setchannel') {
-        logger.debug(`Set channel with GUI command hit.`)
+        logger.debug(`setchannel command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
             await interaction.deferReply()
             // @ts-ignore
@@ -120,7 +120,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const logChannelObj = await client.channels.fetch(logChannel.id) as TextChannel
             logger.debug(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})`)
             await interaction.editReply(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})...`)
-            // logger.debug(`logChannel: ${logChannel}\nlogChannel type: ${logChannel.type}`)
             if (logChannel.type !== ChannelType.GuildText) {
                 logger.error(`Error: Channel is not a text channel.`)
                 await interaction.followUp(`エラー。ボイスチャンネルは指定できません！`)

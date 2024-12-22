@@ -23,6 +23,19 @@ log4js.configure({
 const logger = log4js.getLogger();
 logger.level = 'debug';
 
+const prisma = new PrismaClient()
+
+// get_vc_ids()
+//     .then(() => {
+//         logger.info('get_vc_ids() done.')
+//     })
+//     .catch(e => {
+//         logger.error(
+//             `Error: ${e}`
+//         )
+//     })
+
+
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 
@@ -30,7 +43,6 @@ const client = new Client({
     intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates | IntentsBitField.Flags.GuildMembers | IntentsBitField.Flags.GuildModeration
 });
 
-const prisma = new PrismaClient()
 
 let commands = [];
 const commandPing = new SlashCommandBuilder()
@@ -188,6 +200,56 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     //     `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.displayName}) ${newState.member?.id}`
     // )
     const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+
+    await prisma.vCS.findMany({
+        select: {vc_id: true, id: true},
+        where: {vc_id: oldState.channelId ?? undefined}
+    }).then(async (vcs) => {
+        // vcs.filter(vcs => {if (vcs.vc_id === oldState.channelId){
+        oldState.channel?.fetch(false).then(async (channel) => {
+            for (const vcs1 of vcs) {
+                if (channel.id === vcs1.vc_id) {
+                    await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {
+                        logger.error(e)
+                    })
+                    logger.debug(`deleted vc: ${oldState.channelId}: ${oldState.channel?.name}`)
+
+                }
+                await prisma.vCS.delete({
+                    where: {id: vcs1.id}
+                }).catch(e => {logger.error(e)
+                })
+                logger.debug(`deleted vc from db: ${vcs1.vc_id}`)
+            }
+
+            // await prisma.vCS.delete({
+            //     select: {vc_id: true},
+            //     where: {vc_id: vcs.find('vc_id')}
+            // }).catch(e => {
+            //     logger.error(e)
+            // }).then(async () => {
+            // logger.debug(`deleted vc from db: ${vc_id}: ${vc_name}`)
+        })
+        // logger.debug(`deleted vc: ${vc_id}: ${vc_name}`)
+
+    })
+    // })
+
+    // let vcsList = db.filter(vcs => vcs.vc_id !== undefined)
+    // for (let {guild_id, id, member_id, vc_id, vc_name} of vcsList) {
+    // logger.debug(`voicestateupdate: vcsList: vc_id: ${vc_id}`)
+    // if (oldState.channelId === vc_id) {
+    //     oldState.channel?.fetch(false).then(async (channel) => {
+    //         await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {logger.error(e)})
+    //         logger.debug(`deleted vc: ${vc_id}: ${vc_name}`)
+    //     })
+
+    // }
+
+    // }
+    // await prisma.$disconnect()
+
+
     // if (newState.channelId !== undefined) {
     if (newState.channelId === CREATE_VC) {
         try {
@@ -202,6 +264,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
             await newState.member?.fetch(false).then(async (member) => {
                 await member.voice.setChannel(createdChannel)
             })
+            logger.debug(`created vc: ${createdChannel.id}: ${createdChannel.name}`)
             // @ts-ignore
             // if (await prisma.vCS.findUnique({where: {vc_id: createdChannelId}})) {
 
@@ -213,6 +276,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                     vc_name: createdChannel.name,
                 }
             })
+            logger.debug(`created vc in db: ${createdChannel.id}: ${createdChannel.name}`)
             // }
             // const db_vcs = await prisma.vCS.findFirst({
             //     where: {vc_id: createdChannel.id}
@@ -228,14 +292,31 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
             }
 */
             await prisma.$disconnect()
-            return
         } catch (e) {
             logger.error(
                 `Error: ${e}`
             )
         }
     }
+    // if (oldState.channelId === CREATE_VC) {
+    // let db = await prisma.vCS.findMany()
+    // let vcsList = db.filter(vcs => vcs.vc_id !== undefined)
+    // for (let {guild_id, id, member_id, vc_id, vc_name} of vcsList) {
+    //     // logger.debug(`voicestateupdate: vcsList: vc_id: ${vc_id}`)
+    //     if (oldState.channelId === vc_id) {
+    //         oldState.channel?.fetch(false).then(async (channel) => {
+    //             await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {logger.error(e)})
+    //             logger.debug(`deleted vc: ${vc_id}: ${vc_name}`)
+    //         })
+    //         await prisma.vCS.delete({where: {id: id}}).catch(e => {logger.error(e)}).then(async () => {logger.debug(`deleted vc from db: ${vc_id}: ${vc_name}`)})
+    //     }
+    //
+    // }
+    // await prisma.$disconnect()
+    // return
+    // }/**/
     // }else
+    /*
     if (oldState.channelId !== undefined) {
         logger.debug(`oldstate hit. `)
         try {
@@ -267,7 +348,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                 `Error: ${e}`
             )
         }
-    }
+    }*/
 })
 
 client.login(TOKEN).catch(e => {
@@ -275,3 +356,37 @@ client.login(TOKEN).catch(e => {
         `Error: ${e}`
     )
 })
+
+async function get_vc_ids() {
+    const db = await prisma.vCS.findMany()
+    const vcsList = db.filter(vcs => vcs.vc_id !== undefined)
+    vcsList.forEach(({guild_id, id, member_id, vc_id, vc_name}) => {
+        logger.debug(`get_vc_ids: vcsList: vc_id: ${vc_id}`)
+    })
+    // })
+    // if (db_setting?.channel_for_notify) {
+    //     await prisma.settings.update({
+    //         where: {guild_id: BigInt(interaction.guildId!)},
+    //         // update: {},
+    //         data: {
+    //             guild_id: BigInt(interaction.guildId!),
+    //             guild_name: guild.name!,
+    //             set_user_id: BigInt(interaction.user.id!),
+    //             channel_for_notify: logChannelObj.id
+    //         }
+    //     })
+    // } else {
+    //     await prisma.settings.create({
+    //         data: {
+    //             guild_id: BigInt(interaction.guildId!),
+    //             guild_name: guild.name!,
+    //             set_user_id: BigInt(interaction.user.id!),
+    //             channel_for_notify: logChannelObj.id
+    //         }
+    //     })
+    // }
+    await prisma.$disconnect()
+    return vcsList
+}
+
+// }

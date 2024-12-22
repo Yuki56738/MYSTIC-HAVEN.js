@@ -6,7 +6,7 @@ import {
     Events,
     TextChannel,
     Interaction,
-    PermissionOverwrites
+    PermissionOverwrites, VoiceState
 } from 'discord.js';
 import * as dotenv from "dotenv";
 import {ChannelType} from 'discord.js';
@@ -34,8 +34,11 @@ logger.level = 'debug';
 const TOKEN = process.env.BOT_TOKEN;
 const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 
-const client = new Client({intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates | IntentsBitField.Flags.GuildMembers | IntentsBitField.Flags.GuildModeration
+const client = new Client({
+    intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates | IntentsBitField.Flags.GuildMembers | IntentsBitField.Flags.GuildModeration
 });
+
+const prisma = new PrismaClient()
 
 let commands = [];
 const commandPing = new SlashCommandBuilder()
@@ -101,7 +104,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         try {
             await interaction.deferReply()
             logger.info('Attempting to connect to database.')
-            const prisma = new PrismaClient()
             const guildId = BigInt(interaction.guildId!);
             const setting = await prisma.settings.findUnique({where: {guild_id: guildId}});
 
@@ -138,7 +140,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
             logger.debug(`Attempting to connect to database.`)
             const guild = await client.guilds.fetch(interaction.guildId!)
-            const prisma = new PrismaClient()
+
             const db_setting = await prisma.settings.findFirst({
                 where: {guild_id: BigInt(interaction.guildId!)}
             })
@@ -171,26 +173,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return
 
     }
-    if (interaction.commandName === 'setvc'){
+    if (interaction.commandName === 'setvc') {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         await interaction.deferReply()
-        try{
+        try {
             const vc = interaction.options.data
             logger.debug(`vc: ${vc.toString()}`)
             await interaction.editReply(`vc: ${vc.toString()}`)
             return
-        }catch(e){
+        } catch (e) {
             logger.error(`Error: ${e}`)
         }
     }
 })
 
-client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
     logger.debug(`VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`)
-    const CREATE_VC = process.env.CREATE_VC ||  '1316107393343553719'
+    const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
     if (newState.channelId !== undefined) {
         if (newState.channelId === CREATE_VC) {
-            try{
+            try {
                 // const member = newState.guild.members.cache.get(newState.member?.id!)
                 const member = newState.member
                 const createdChannel = await newState.guild?.channels.create({
@@ -198,10 +200,31 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
                     type: ChannelType.GuildVoice,
                     parent: newState.channel?.parent,
                 });
-                const prisma = new PrismaClient()
+
+                // @ts-ignore
+                await prisma.vCS.upsert({
+                    //@ts-ignore
+                    where: {
+                        vc_id: createdChannel.id,
+                    },
+                    update:{
+                        vc_id: createdChannel.id,
+                        guild_id: createdChannel.guildId,
+                        member_id: newState.member?.id
+                    }
+                    // data:{
+                    //     update:{
+                    //
+                    //     }
+                    // }
+
+                })
                 // const db_vcs = await prisma.vCS.findFirst({
-                //     where: {vc_id: BigInt(createdChannel.id)}
+                //     where: {vc_id: createdChannel.id}
                 // })
+                // if (db_vcs?.vc_id === undefined) {
+                //     db_vcs.vc_id
+                // }
                 /*
                 const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
                 if (db_vcs){
@@ -210,7 +233,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
                 }
 */
                 await prisma.vCS
-            }catch (e) {
+            } catch (e) {
                 logger.error(`Error: ${e}`)
             }
         }

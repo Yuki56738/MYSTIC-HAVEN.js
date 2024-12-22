@@ -210,14 +210,15 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                     update: {
                         vc_id: createdChannel.id,
                         guild_id: createdChannel.guildId,
-                        member_id: newState.member?.id
+                        member_id: newState.member?.id,
+                        vc_name: createdChannel.name,
+                    },
+                    create: {
+                        vc_id: createdChannel.id,
+                        guild_id: createdChannel.guildId,
+                        member_id: newState.member?.id!,
+                        vc_name: createdChannel.name,
                     }
-                    // data:{
-                    //     update:{
-                    //
-                    //     }
-                    // }
-
                 })
                 // const db_vcs = await prisma.vCS.findFirst({
                 //     where: {vc_id: createdChannel.id}

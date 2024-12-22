@@ -161,6 +161,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 })
 
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+    logger.debug(`VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`)
+
+    if (oldState.channel?.id === newState.channel?.id) {
+        logger.debug(`oldState.channel.id === newState.channel.id`)
+        return
+    }
+    if (!oldState.channel) {
+        logger.debug(`oldState.channel is null`)
+        return
+    }
+})
+
 client.login(TOKEN).catch(e => {
     logger.error(`Error: ${e}`)
 })

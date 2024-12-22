@@ -187,10 +187,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     }
                 })
             }else{
-                await prisma.settings.upsert({
-                    where: {guild_id: BigInt(interaction.guildId!)},
-                    // create: {},
-                    update: {}
+                await prisma.settings.create({
+                    data: {
+                        guild_id: BigInt(interaction.guildId!),
+                        guild_name: guild.name!,
+                        set_user_id: BigInt(interaction.user.id!),
+                        channel_for_notify: logChannelObj.id
+                    }
                 })
             }
             await prisma.$disconnect()

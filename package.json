@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx ts-node main.ts",
-    "build": "npx tsc && npx prisma migrate deploy && npx prisma generate",
+    "build": "npx tsc && npx prisma generate && npx prisma migrate deploy",
     "start": "node dist/main.js"
   },
   "dependencies": {

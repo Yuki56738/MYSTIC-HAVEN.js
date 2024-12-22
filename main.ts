@@ -179,62 +179,93 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 `Error: ${e}`
             )
         }
+        return
     }
 })
 
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    logger.debug(
-        `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`
-    )
+    // logger.debug(
+    //     `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.displayName}) ${newState.member?.id}`
+    // )
     const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
-    if (newState.channelId !== undefined) {
-        if (newState.channelId === CREATE_VC) {
-            try {
-                // const member = newState.guild.members.cache.get(newState.member?.id!)
-                const member = newState.member
-                const createdChannel = await newState.guild?.channels.create({
-                    name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
-                    type: ChannelType.GuildVoice,
-                    parent: newState.channel?.parent,
-                });
+    // if (newState.channelId !== undefined) {
+    if (newState.channelId === CREATE_VC) {
+        try {
+            // const member = newState.guild.members.cache.get(newState.member?.id!)
+            const member = newState.member
+            const createdChannel = await newState.guild?.channels.create({
+                name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
+                type: ChannelType.GuildVoice,
+                parent: newState.channel?.parent,
+            })
+            const createdChannelId = client.channels.cache.get(createdChannel.id)!.id
+            await newState.member?.fetch(false).then(async (member) => {
+                await member.voice.setChannel(createdChannel)
+            })
+            // @ts-ignore
+            // if (await prisma.vCS.findUnique({where: {vc_id: createdChannelId}})) {
 
-                // @ts-ignore
-                await prisma.vCS.upsert({
-                    //@ts-ignore
-                    where: {
-                        vc_id: createdChannel.id,
-                    },
-                    update: {
-                        vc_id: createdChannel.id,
-                        guild_id: createdChannel.guildId,
-                        member_id: newState.member?.id,
-                        vc_name: createdChannel.name,
-                    },
-                    create: {
-                        vc_id: createdChannel.id,
-                        guild_id: createdChannel.guildId,
-                        member_id: newState.member?.id!,
-                        vc_name: createdChannel.name,
-                    }
-                })
-                // const db_vcs = await prisma.vCS.findFirst({
-                //     where: {vc_id: createdChannel.id}
-                // })
-                // if (db_vcs?.vc_id === undefined) {
-                //     db_vcs.vc_id
-                // }
-                /*
-                const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
-                if (db_vcs){
-
-
+            await prisma.vCS.create({
+                data: {
+                    vc_id: createdChannelId!,
+                    guild_id: createdChannel.guildId,
+                    member_id: newState.member?.id!,
+                    vc_name: createdChannel.name,
                 }
-*/
-            } catch (e) {
-                logger.error(
-                    `Error: ${e}`
-                )
+            })
+            // }
+            // const db_vcs = await prisma.vCS.findFirst({
+            //     where: {vc_id: createdChannel.id}
+            // })
+            // if (db_vcs?.vc_id === undefined) {
+            //     db_vcs.vc_id
+            // }
+            /*
+            const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
+            if (db_vcs){
+
+
             }
+*/
+            await prisma.$disconnect()
+            return
+        } catch (e) {
+            logger.error(
+                `Error: ${e}`
+            )
+        }
+    }
+    // }else
+    if (oldState.channelId !== undefined) {
+        logger.debug(`oldstate hit. `)
+        try {
+            const db_vcs = await prisma.vCS.findMany({where: {vc_id: oldState.channelId ?? undefined}})
+            if (db_vcs.length > 0) {
+                for (const vcs of db_vcs) {
+                    logger.debug(vcs.toString())
+                }
+            }
+            // const db_vcs = await prisma.vCS.findFirst({select: {vc_id: true}, where: {vc_id: oldState.channelId}})
+            // const db_vcs = await prisma.vCS.findMany({
+            //     where: {vc_id: oldState.channelId!}
+            // })
+            // for (const vcs of db_vcs) {oldState.client.guilds.fetch(vcs.guild_id!).then(async (guild) => {guild.channels.fetch(vcs.vc_id!).then(async (channel) => {await channel!.delete()})})}
+
+            // oldState.guild.channels.fetch(db_vcs?.vc_id!).then(async (channel) => {channel.delete}))
+
+            // await client.channels.resolve(db_vcs?.vc_id!).delete()
+            // await prisma.vCS.findFirst({where: db_vcs!})
+            // await prisma.vCS.delete({
+            //     where: {
+            //         vc_id: oldState.guild.channels.cache.get(oldState.channelId!)?.id
+            //     }
+            // })
+            await prisma.$disconnect()
+
+        } catch (e) {
+            logger.error(
+                `Error: ${e}`
+            )
         }
     }
 })

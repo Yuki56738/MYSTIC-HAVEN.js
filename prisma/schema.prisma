@@ -23,7 +23,7 @@ model Settings {
 }
 
 model VCS {
-  id        Int    @id @default(autoincrement())
+  id        BigInt @id @default(autoincrement())
   vc_id     String @db.Text
   member_id String @db.Text
   guild_id  String @db.Text

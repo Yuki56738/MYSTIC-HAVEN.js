@@ -45,7 +45,7 @@ const commandDebug = new SlashCommandBuilder()
     .setName('debug')
     .setDescription('Debugs the bot.')
 commands.push(commandPing.toJSON());
-commands.push(commandSetChannel.toJSON());
+// commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());

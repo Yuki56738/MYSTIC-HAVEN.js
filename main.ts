@@ -177,70 +177,80 @@ client.on(Events.InteractionCreate, async (interaction) => {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         await interaction.deferReply()
         try {
-            const vc = interaction.options.data
-            logger.debug(`vc: ${vc.toString()}`)
-            await interaction.editReply(`vc: ${vc.toString()}`)
-            return
-        } catch (e) {
-            logger.error(`Error: ${e}`)
-        }
-    }
-})
-
-client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    logger.debug(`VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`)
-    const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
-    if (newState.channelId !== undefined) {
-        if (newState.channelId === CREATE_VC) {
-            try {
-                // const member = newState.guild.members.cache.get(newState.member?.id!)
-                const member = newState.member
-                const createdChannel = await newState.guild?.channels.create({
-                    name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
-                    type: ChannelType.GuildVoice,
-                    parent: newState.channel?.parent,
-                });
-
-                // @ts-ignore
-                await prisma.vCS.upsert({
-                    //@ts-ignore
-                    where: {
-                        vc_id: createdChannel.id,
-                    },
-                    update: {
-                        vc_id: createdChannel.id,
-                        guild_id: createdChannel.guildId,
-                        member_id: newState.member?.id,
-                        vc_name: createdChannel.name,
-                    },
-                    create: {
-                        vc_id: createdChannel.id,
-                        guild_id: createdChannel.guildId,
-                        member_id: newState.member?.id!,
-                        vc_name: createdChannel.name,
-                    }
-                })
-                // const db_vcs = await prisma.vCS.findFirst({
-                //     where: {vc_id: createdChannel.id}
-                // })
-                // if (db_vcs?.vc_id === undefined) {
-                //     db_vcs.vc_id
-                // }
-                /*
-                const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
-                if (db_vcs){
-
-
+            // @ts-ignore
+            const vc = interaction.options.getChannel('voice_channel')
+            logger.debug(`vc: ${vc.id}`)
+            await interaction.editReply(`vc: ${vc.toString()}`
+        )
+                    return
+                } catch (e) {
+                    logger.error(
+            `Error: ${e}`
+        )
                 }
-*/
-                await prisma.vCS
-            } catch (e) {
-                logger.error(`Error: ${e}`)
             }
-        }
-    }
-})
+        })
 
-client.login(TOKEN).catch(e => {
-    logger.error(`Error: ${e}`)
-})
+        client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
+            logger.debug(
+            `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.nickname}) ${newState.member?.id}`
+        )
+            const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+            if (newState.channelId !== undefined) {
+                if (newState.channelId === CREATE_VC) {
+                    try {
+                        // const member = newState.guild.members.cache.get(newState.member?.id!)
+                        const member = newState.member
+                        const createdChannel = await newState.guild?.channels.create({
+                            name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
+                            type: ChannelType.GuildVoice,
+                            parent: newState.channel?.parent,
+                        });
+
+                        // @ts-ignore
+                        await prisma.vCS.upsert({
+                            //@ts-ignore
+                            where: {
+                                vc_id: createdChannel.id,
+                            },
+                            update: {
+                                vc_id: createdChannel.id,
+                                guild_id: createdChannel.guildId,
+                                member_id: newState.member?.id,
+                                vc_name: createdChannel.name,
+                            },
+                            create: {
+                                vc_id: createdChannel.id,
+                                guild_id: createdChannel.guildId,
+                                member_id: newState.member?.id!,
+                                vc_name: createdChannel.name,
+                            }
+                        })
+                        // const db_vcs = await prisma.vCS.findFirst({
+                        //     where: {vc_id: createdChannel.id}
+                        // })
+                        // if (db_vcs?.vc_id === undefined) {
+                        //     db_vcs.vc_id
+                        // }
+                        /*
+                        const db_vcs = await prisma.vCS.findUnique({where: {vc_id: BigInt(createdChannel.id)}})
+                        if (db_vcs){
+
+
+                        }
+        */
+                        await prisma.vCS
+                    } catch (e) {
+                        logger.error(
+            `Error: ${e}`
+        )
+                    }
+                }
+            }
+        })
+
+        client.login(TOKEN).catch(e => {
+            logger.error(
+            `Error: ${e}`
+        )
+        })

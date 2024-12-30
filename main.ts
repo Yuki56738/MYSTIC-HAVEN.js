@@ -108,7 +108,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const setting = await prisma.settings.findUnique({where: {guild_id: guildId}});
 
             if (setting) {
-                const channelForNotify = setting.channel_for_notify;
+                const channelForNotify = setting.channel_for_wanted;
                 // @ts-ignore
                 const channelForNotifyObj = await client.channels.fetch(channelForNotify) as TextChannel
                 await interaction.editReply(`募集版は、 ${channelForNotifyObj.name} (${channelForNotifyObj.id}).`)
@@ -143,7 +143,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const db_setting = await prisma.settings.findFirst({
                 where: {guild_id: BigInt(interaction.guildId!)}
             })
-            if (db_setting?.channel_for_notify) {
+            if (db_setting?.channel_for_wanted) {
                 await prisma.settings.update({
                     where: {guild_id: BigInt(interaction.guildId!)},
                     // update: {},
@@ -151,7 +151,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id,
+                        channel_for_wanted: logChannelObj.id,
                         vc_for_create: '0'
                     }
                 })
@@ -161,7 +161,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id,
+                        channel_for_wanted: logChannelObj.id,
                         vc_for_create: '0'
                     }
                 })
@@ -209,7 +209,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     guild_name: guild.name!,
                     set_user_id: BigInt(interaction.user.id!),
                     vc_for_create: vc.id,
-                    channel_for_notify: '0',
+                    channel_for_wanted: '0',
                 }
             })
             return

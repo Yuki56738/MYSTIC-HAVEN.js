@@ -19,6 +19,7 @@ model Settings {
   guild_id           BigInt?        @unique
   set_user_id        BigInt
   guild_name         String         @db.Text
+  vc_for_create      String         @db.Text
   guildsettings      guildsettings?
 }
 

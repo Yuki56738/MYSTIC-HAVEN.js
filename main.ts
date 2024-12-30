@@ -1,14 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {
-    ChannelType,
-    Client,
-    Events,
-    IntentsBitField,
-    SlashCommandBuilder,
-    TextChannel,
-    VoiceChannel,
-    VoiceState
-} from 'discord.js';
+import {ChannelType, Client, Events, IntentsBitField, SlashCommandBuilder, TextChannel, VoiceState} from 'discord.js';
 import * as dotenv from "dotenv";
 
 import log4js from "log4js";
@@ -56,7 +47,7 @@ const commandSetVC = new SlashCommandBuilder()
     .setName('setvc')
     .setDescription('ボイチャ作成用チャンネルの指定.')
     .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
-        .addChannelTypes(ChannelType. GuildVoice))
+        .addChannelTypes(ChannelType.GuildVoice))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
@@ -151,7 +142,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id
+                        channel_for_notify: logChannelObj.id,
+                        vc_for_create: '0'
                     }
                 })
             } else {
@@ -160,7 +152,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id
+                        channel_for_notify: logChannelObj.id,
+                        vc_for_create: '0'
                     }
                 })
             }
@@ -174,12 +167,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
     if (interaction.commandName === 'setvc') {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
-        await interaction.deferReply()
         try {
-            // @ts-ignore
+            await interaction.deferReply()
+
             const vc = interaction.options.getChannel('voice_channel')
+            if (vc === undefined || vc === null) {
+                logger.error(`setvc comand: Error: Channel is null or undefined.`)
+                await interaction.editReply('internal error. killing this command...')
+                return
+            }
             logger.debug(`vc: ${vc?.id}`)
-            await interaction.editReply(`vc: ${vc?.toString()}`)
+            logger.debug(`setvc: vc: ${vc?.name}: ${vc?.id}`)
+            // await interaction.editReply(`vc: ${vc?.toString()}`)
+            await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
+
+            const guild = await client.guilds.fetch(interaction.guildId!)
+            logger.debug('Attaching database...')
+            await prisma.settings.upsert({
+                where: {guild_id: BigInt(interaction.guildId!)},
+                update: {
+                    guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    vc_for_create: vc.id,
+                },
+                create: {
+                    guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    vc_for_create: vc.id,
+                    channel_for_notify: '0',
+                }
+            })
             return
         } catch (e) {
             logger.error(
@@ -194,7 +213,10 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     // logger.debug(
     //     `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.displayName}) ${newState.member?.id}`
     // )
-    const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+    logger.debug(`VoiceStateUpdate event hit.`)
+
+
+    // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
     await prisma.vCS.findMany({
         select: {vc_id: true, id: true},
@@ -221,7 +243,17 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
         })
 
     })
-    if (newState.channelId === CREATE_VC) {
+
+    //get VC for create new VC
+    const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
+    const vcForCreate = db_settings?.vc_for_create ?? null;
+    if (vcForCreate === null) {
+        // logger.error(
+        //     `Error: vcForCreate is null`)
+        return
+    }
+
+    if (newState.channelId === vcForCreate) {
         try {
             // const member = newState.guild.members.cache.get(newState.member?.id!)
             const member = newState.member

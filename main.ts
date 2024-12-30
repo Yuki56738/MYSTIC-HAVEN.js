@@ -71,6 +71,7 @@ client.on('ready', async () => {
     client.guilds.cache.forEach((guild) => {
         logger.info(`- ${guild.name}`);
     })
+    client.user?.setActivity('Created by Yuki.')
     if (process.env.TEST_GUILD_ID !== undefined) {
         logger.info('dev environment detected. Deploying commands to guild....')
         if (!TEST_GUILD_ID) {
@@ -127,7 +128,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         logger.debug(`setchannel command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
             await interaction.deferReply()
-            // @ts-ignore
             const logChannel = interaction.options.getChannel('channel')
             const logChannelObj = await client.channels.fetch(logChannel!.id) as TextChannel
             logger.debug(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})`)

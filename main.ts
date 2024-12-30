@@ -173,12 +173,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
     if (interaction.commandName === 'setvc') {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
-        await interaction.deferReply()
         try {
-            // @ts-ignore
+            await interaction.deferReply()
+
             const vc = interaction.options.getChannel('voice_channel')
+            if (vc === undefined) {
+                logger.error(`setvc comand: Error: Channel is not a text channel.`)
+                await interaction.editReply('internal error. killing this command...')
+                return
+            }
             logger.debug(`vc: ${vc?.id}`)
-            await interaction.editReply(`vc: ${vc?.toString()}`)
+            logger.debug(`setvc: vc: ${vc?.name}: ${vc?.id}`)
+            // await interaction.editReply(`vc: ${vc?.toString()}`)
+            await interaction.editReply(`VC作成用チャンネルを、VC '${vc!.name}'に設定しています...`)
+
             return
         } catch (e) {
             logger.error(

@@ -1,13 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {
-    ChannelType,
-    Client,
-    Events,
-    IntentsBitField,
-    SlashCommandBuilder,
-    TextChannel,
-    VoiceState
-} from 'discord.js';
+import {ChannelType, Client, Events, IntentsBitField, SlashCommandBuilder, TextChannel, VoiceState} from 'discord.js';
 import * as dotenv from "dotenv";
 
 import log4js from "log4js";
@@ -150,7 +142,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id
+                        channel_for_notify: logChannelObj.id,
+                        vc_for_create: '0'
                     }
                 })
             } else {
@@ -159,7 +152,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         guild_id: BigInt(interaction.guildId!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
-                        channel_for_notify: logChannelObj.id
+                        channel_for_notify: logChannelObj.id,
+                        vc_for_create: '0'
                     }
                 })
             }
@@ -177,16 +171,34 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await interaction.deferReply()
 
             const vc = interaction.options.getChannel('voice_channel')
-            if (vc === undefined) {
-                logger.error(`setvc comand: Error: Channel is not a text channel.`)
+            if (vc === undefined || vc === null) {
+                logger.error(`setvc comand: Error: Channel is null or undefined.`)
                 await interaction.editReply('internal error. killing this command...')
                 return
             }
             logger.debug(`vc: ${vc?.id}`)
             logger.debug(`setvc: vc: ${vc?.name}: ${vc?.id}`)
             // await interaction.editReply(`vc: ${vc?.toString()}`)
-            await interaction.editReply(`VC作成用チャンネルを、VC '${vc!.name}'に設定しています...`)
+            await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
 
+            const guild = await client.guilds.fetch(interaction.guildId!)
+            logger.debug('Attaching database...')
+            await prisma.settings.upsert({
+                where: {guild_id: BigInt(interaction.guildId!)},
+                update: {
+                    guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    vc_for_create: vc.id,
+                },
+                create: {
+                    guild_id: BigInt(interaction.guildId!),
+                    guild_name: guild.name!,
+                    set_user_id: BigInt(interaction.user.id!),
+                    vc_for_create: vc.id,
+                    channel_for_notify: '0',
+                }
+            })
             return
         } catch (e) {
             logger.error(

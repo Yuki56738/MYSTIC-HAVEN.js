@@ -213,7 +213,10 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     // logger.debug(
     //     `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.displayName}) ${newState.member?.id}`
     // )
-    const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+    logger.debug(`VoiceStateUpdate event hit.`)
+
+
+    // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
     await prisma.vCS.findMany({
         select: {vc_id: true, id: true},
@@ -240,7 +243,17 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
         })
 
     })
-    if (newState.channelId === CREATE_VC) {
+
+    //get VC for create new VC
+    const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
+    const vcForCreate = db_settings?.vc_for_create ?? null;
+    if (vcForCreate === null) {
+        logger.error(
+            `Error: vcForCreate is null`)
+        return
+    }
+
+    if (newState.channelId === vcForCreate) {
         try {
             // const member = newState.guild.members.cache.get(newState.member?.id!)
             const member = newState.member

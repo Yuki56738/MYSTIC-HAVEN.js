@@ -248,8 +248,8 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
-        logger.error(
-            `Error: vcForCreate is null`)
+        // logger.error(
+        //     `Error: vcForCreate is null`)
         return
     }
 

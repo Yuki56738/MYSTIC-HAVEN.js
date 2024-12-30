@@ -1,5 +1,14 @@
 import {PrismaClient} from "@prisma/client";
-import {ChannelType, Client, Events, IntentsBitField, SlashCommandBuilder, TextChannel, VoiceState} from 'discord.js';
+import {
+    ChannelType,
+    Client,
+    Events,
+    IntentsBitField,
+    PermissionsBitField,
+    SlashCommandBuilder,
+    TextChannel,
+    VoiceState
+} from 'discord.js';
 import * as dotenv from "dotenv";
 
 import log4js from "log4js";
@@ -169,6 +178,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
             await interaction.deferReply()
+            if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator, true)) {
+                await interaction.editReply('権限拒否。')
+                return
+            }
 
             const vc = interaction.options.getChannel('voice_channel')
             if (vc === undefined || vc === null) {

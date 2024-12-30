@@ -6,7 +6,6 @@ import {
     IntentsBitField,
     SlashCommandBuilder,
     TextChannel,
-    VoiceChannel,
     VoiceState
 } from 'discord.js';
 import * as dotenv from "dotenv";
@@ -56,7 +55,7 @@ const commandSetVC = new SlashCommandBuilder()
     .setName('setvc')
     .setDescription('ボイチャ作成用チャンネルの指定.')
     .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
-        .addChannelTypes(ChannelType. GuildVoice))
+        .addChannelTypes(ChannelType.GuildVoice))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());

@@ -140,32 +140,48 @@ client.on(Events.InteractionCreate, async (interaction) => {
             logger.debug(`Attempting to connect to database.`)
             const guild = await client.guilds.fetch(interaction.guildId!)
 
-            const db_setting = await prisma.settings.findFirst({
+            const db_setting = await prisma.settings.findUnique({
                 where: {guild_id: BigInt(interaction.guildId!)}
             })
-            if (db_setting?.channel_for_wanted) {
-                await prisma.settings.update({
-                    where: {guild_id: BigInt(interaction.guildId!)},
-                    // update: {},
-                    data: {
-                        guild_id: BigInt(interaction.guildId!),
+
+            if (db_setting) {
+                await prisma.settings.upsert({
+                    where: {guild_id: BigInt(guild.id!)},
+                    create: {
+                        guild_id: BigInt(guild.id!),
                         guild_name: guild.name!,
                         set_user_id: BigInt(interaction.user.id!),
                         channel_for_wanted: logChannelObj.id,
                         vc_for_create: '0'
-                    }
+                    },
+                    update: {}
                 })
-            } else {
-                await prisma.settings.create({
-                    data: {
-                        guild_id: BigInt(interaction.guildId!),
-                        guild_name: guild.name!,
-                        set_user_id: BigInt(interaction.user.id!),
-                        channel_for_wanted: logChannelObj.id,
-                        vc_for_create: '0'
-                    }
-                })
+
+
             }
+            // if (db_setting?.channel_for_wanted) {
+            //     await prisma.settings.update({
+            //         where: {guild_id: BigInt(interaction.guildId!)},
+            //         // update: {},
+            //         data: {
+            //             guild_id: BigInt(interaction.guildId!),
+            //             guild_name: guild.name!,
+            //             set_user_id: BigInt(interaction.user.id!),
+            //             channel_for_wanted: logChannelObj.id,
+            //             vc_for_create: '0'
+            //         }
+            //     })
+            // } else {
+            //     await prisma.settings.create({
+            //         data: {
+            //             guild_id: BigInt(interaction.guildId!),
+            //             guild_name: guild.name!,
+            //             set_user_id: BigInt(interaction.user.id!),
+            //             channel_for_wanted: logChannelObj.id,
+            //             vc_for_create: '0'
+            //         }
+            //     })
+            // }
             await prisma.$disconnect()
             await interaction.followUp(`募集版を ${logChannel.name} (${logChannel.id}) に設定しました。`)
         } catch (e) {

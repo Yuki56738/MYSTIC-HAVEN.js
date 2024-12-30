@@ -76,7 +76,6 @@ client.on('ready', async () => {
         logger.info('Production environment detected. Deploying commands to global....')
         await client.application?.commands.set(commands);
     }
-
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

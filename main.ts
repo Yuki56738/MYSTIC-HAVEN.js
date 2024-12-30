@@ -253,12 +253,4 @@ client.login(TOKEN).catch(e => {
     )
 })
 
-async function get_vc_ids() {
-    const db = await prisma.vCS.findMany()
-    const vcsList = db.filter(vcs => vcs.vc_id !== undefined)
-    vcsList.forEach(({guild_id, id, member_id, vc_id, vc_name}) => {
-        logger.debug(`get_vc_ids: vcsList: vc_id: ${vc_id}`)
-    })
-    await prisma.$disconnect()
-    return vcsList
-}
+

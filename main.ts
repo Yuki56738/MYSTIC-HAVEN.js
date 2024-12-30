@@ -1,14 +1,20 @@
 import {PrismaClient} from "@prisma/client";
-import {ChannelType, Client, Events, IntentsBitField, SlashCommandBuilder, TextChannel, VoiceState} from 'discord.js';
+import {
+    ChannelType,
+    Client,
+    Events,
+    IntentsBitField,
+    SlashCommandBuilder,
+    TextChannel,
+    VoiceChannel,
+    VoiceState
+} from 'discord.js';
 import * as dotenv from "dotenv";
 
 import log4js from "log4js";
 
 'use strict'
-if (process.env.NODE_ENV === 'dev') {
-    dotenv.config()
-}
-// dotenv.config()
+dotenv.config()
 log4js.configure({
     appenders: {
         console: {type: 'console'}, // コンソール出力
@@ -49,7 +55,8 @@ const commandDebug = new SlashCommandBuilder()
 const commandSetVC = new SlashCommandBuilder()
     .setName('setvc')
     .setDescription('ボイチャ作成用チャンネルの指定.')
-    .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true))
+    .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
+        .addChannelTypes(ChannelType. GuildVoice))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
@@ -64,10 +71,11 @@ client.on('ready', async () => {
     client.guilds.cache.forEach((guild) => {
         logger.info(`- ${guild.name}`);
     })
-    if (process.env.RAILWAY_ENVIRONMENT_NAME !== 'production') {
+    if (process.env.TEST_GUILD_ID !== undefined) {
         logger.info('dev environment detected. Deploying commands to guild....')
         if (!TEST_GUILD_ID) {
             logger.error('Error: TEST_GUILD_ID is undefined.');
+            return
         }
         await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
             await guild.commands.set(commands);

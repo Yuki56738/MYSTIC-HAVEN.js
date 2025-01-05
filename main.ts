@@ -25,7 +25,6 @@ log4js.configure({
         default: {appenders: ['console', 'file'], level: 'info'}, // デフォルトカテゴリ
     },
 });
-
 // ロガーのインスタンス作成
 const logger = log4js.getLogger();
 logger.level = 'debug';

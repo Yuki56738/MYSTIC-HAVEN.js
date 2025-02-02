@@ -230,7 +230,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
     const oldstate_channel= await oldState.channel
-    if (oldstate_channel?.members.size! <= 1) {
+    if (oldstate_channel?.members.size! >= Number(1)) {
         return
     }
 // if (client.channels.fetch(oldState.channelId))

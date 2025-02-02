@@ -229,11 +229,16 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
+    const oldstate_channel= await oldState.channel
+    if (oldstate_channel?.members.size !== 1) {
+        return
+    }
+// if (client.channels.fetch(oldState.channelId))
     await prisma.vCS.findMany({
         select: {vc_id: true, id: true},
         where: {vc_id: oldState.channelId ?? undefined}
     }).then(async (vcs) => {
-        // vcs.filter(vcs => {if (vcs.vc_id === oldState.channelId){
+        // vcs.filter(vcs => {if (vcs.vc_id === oldState.channelId)
         oldState.channel?.fetch(false).then(async (channel) => {
             for (const vcs1 of vcs) {
                 if (channel.id === vcs1.vc_id) {

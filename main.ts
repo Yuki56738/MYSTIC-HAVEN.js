@@ -111,7 +111,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const setting = await prisma.settings.findUnique({where: {guild_id: guildId}});
 
             if (setting) {
-                const channelForNotify = setting.channel_for_notify;
+                const channelForNotify = setting.channel_for_wanted;
                 // @ts-ignore
                 const channelForNotifyObj = await client.channels.fetch(channelForNotify) as TextChannel
                 await interaction.editReply(`募集版は、 ${channelForNotifyObj.name} (${channelForNotifyObj.id}).`)

@@ -5,7 +5,7 @@ import {
     Events,
     IntentsBitField,
     PermissionsBitField,
-    SlashCommandBuilder,
+    SlashCommandBuilder, StringSelectMenuBuilder,
     TextChannel,
     VoiceState
 } from 'discord.js';
@@ -60,10 +60,10 @@ const commandSetVC = new SlashCommandBuilder()
 const commandDelmsgsbyuserid = new SlashCommandBuilder()
     .setName('delmsgbyuserid')
     .setDescription('指定されたIDを持つユーザーの投稿をすべて削除する。')
-    .addNumberOption(option =>
-    option.setName('userid')
-        .setDescription('対象のユーザーのID')
-        .setRequired(true))
+    .addStringOption(option =>
+        option.setName('userid')
+            .setDescription('対象のユーザーのID')
+            .setRequired(true))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
@@ -95,10 +95,28 @@ client.on('ready', async () => {
 });
 
 
-
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
-
+    if (interaction.user.bot) return;
+    logger.debug(
+        `InteractionCreate event hit. by ${interaction.user.tag}: ${interaction.user.id}`
+    )
+    if (interaction.commandName === 'delmsgbyuserid') {
+        const ctxrp = await interaction.deferReply()
+        if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+            await interaction.editReply('権限拒否.')
+            return
+        }
+        const option_userid = interaction.options.getString('userid')
+        console.log(option_userid)
+        const user = interaction.guild?.members.cache.get(option_userid!.toString())
+        // const channel = interaction.guild?.channels.cache.get(interaction.channelId)
+        const channel: TextChannel = interaction.channel! as TextChannel
+        // await interaction.followUp(user?.displayName!)
+        const select = new StringSelectMenuBuilder()
+            .setCustomId('really_delete_msg')
+            .setPlaceholder(`本当に、${user?.displayName} (${user?.nickname}) の全ての投稿を削除しますか？`)
+    }
     if (interaction.commandName === 'ping') {
         logger.debug(`Ping command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
@@ -237,7 +255,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
-    const oldstate_channel= await oldState.channel
+    const oldstate_channel = await oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {
         return
     }

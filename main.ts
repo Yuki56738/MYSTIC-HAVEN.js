@@ -1,7 +1,6 @@
 import {PrismaClient} from "@prisma/client";
 import {
     ChannelType,
-
     Client,
     Events,
     IntentsBitField,
@@ -25,6 +24,7 @@ log4js.configure({
         default: {appenders: ['console', 'file'], level: 'info'}, // デフォルトカテゴリ
     },
 });
+
 // ロガーのインスタンス作成
 const logger = log4js.getLogger();
 logger.level = 'debug';
@@ -37,7 +37,6 @@ const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
 const client = new Client({
     intents: IntentsBitField.Flags.Guilds | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessages | IntentsBitField.Flags.GuildMessageTyping | IntentsBitField.Flags.GuildMessageReactions | IntentsBitField.Flags.MessageContent | IntentsBitField.Flags.GuildVoiceStates | IntentsBitField.Flags.GuildMembers | IntentsBitField.Flags.GuildModeration
 });
-
 
 let commands = [];
 const commandPing = new SlashCommandBuilder()
@@ -58,6 +57,7 @@ const commandSetVC = new SlashCommandBuilder()
     .setDescription('ボイチャ作成用チャンネルの指定.')
     .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
         .addChannelTypes(ChannelType.GuildVoice))
+
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
@@ -88,6 +88,8 @@ client.on('ready', async () => {
     }
 });
 
+
+
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -109,7 +111,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const setting = await prisma.settings.findUnique({where: {guild_id: guildId}});
 
             if (setting) {
-                const channelForNotify = setting.channel_for_wanted;
+                const channelForNotify = setting.channel_for_notify;
                 // @ts-ignore
                 const channelForNotifyObj = await client.channels.fetch(channelForNotify) as TextChannel
                 await interaction.editReply(`募集版は、 ${channelForNotifyObj.name} (${channelForNotifyObj.id}).`)
@@ -141,7 +143,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             logger.debug(`Attempting to connect to database.`)
             const guild = await client.guilds.fetch(interaction.guildId!)
 
-            const db_setting = await prisma.settings.findUnique({
+            const db_setting = await prisma.settings.findFirst({
                 where: {guild_id: BigInt(interaction.guildId!)}
             })
 

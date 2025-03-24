@@ -57,14 +57,20 @@ const commandSetVC = new SlashCommandBuilder()
     .setDescription('ボイチャ作成用チャンネルの指定.')
     .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
         .addChannelTypes(ChannelType.GuildVoice))
-
+const commandDelmsgsbyuserid = new SlashCommandBuilder()
+    .setName('delmsgbyuserid')
+    .setDescription('指定されたIDを持つユーザーの投稿をすべて削除する。')
+    .addNumberOption(option =>
+    option.setName('userid')
+        .setDescription('対象のユーザーのID')
+        .setRequired(true))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 commands.push(commandSetVC.toJSON());
-
+commands.push(commandDelmsgsbyuserid.toJSON());
 
 client.on('ready', async () => {
     logger.info(`Logged in as: ${client.user?.tag}`)

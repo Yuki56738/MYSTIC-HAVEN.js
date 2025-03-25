@@ -4,9 +4,11 @@ import {
     ButtonBuilder,
     ButtonStyle,
     ChannelType,
-    Client, Collection,
+    Client,
+    Collection,
     Events,
-    IntentsBitField, Message,
+    IntentsBitField,
+    Message,
     PermissionsBitField,
     SlashCommandBuilder,
     TextChannel,
@@ -67,6 +69,7 @@ const commandDelmsgsbyuserid = new SlashCommandBuilder()
         option.setName('userid')
             .setDescription('対象のユーザーのID')
             .setRequired(true))
+
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
@@ -105,7 +108,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         `InteractionCreate event hit. by ${interaction.user.tag}: ${interaction.user.id}`
     )
     if (interaction.commandName === 'delmsgbyuserid') {
-        // const ctxrp = await interaction.deferReply()
+        await interaction.deferReply()
         if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.editReply('権限拒否.')
             return
@@ -193,20 +196,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 logger.error(`Error during message deletion: ${error}`);
                 await interaction.followUp('エラーが発生しました。メッセージを削除できませんでした。');
             }
-            // const guildchannels = interaction.guild?.channels.fetch().then(async (channels) => {
-            //     // channels.forEach(async (channel) => {
-            //     //     if (channel!.type === ChannelType.GuildText) {
-            //     //         const msgs = await channel?.messages.fetch({limit: 1000});
-            //     //         console.log(msgs!.toString());
-            //     //     }
-            //     // })
-            //    
-            // })
         }
-        // await interaction.followUp({
-        //     content: `本当に、${user?.displayName} (${user?.nickname}) の全ての投稿を削除しますか？`,
-        //     components: [row.toJSON()],
-        // })
+
     }
     if (interaction.commandName === 'ping') {
         logger.debug(`Ping command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
@@ -338,9 +329,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 })
 
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    // logger.debug(
-    //     `VoiceStateUpdate event hit. oldstate: ${oldState.channel?.name} (${oldState.channel?.id}) ${oldState.member?.displayName} (${oldState.member?.nickname}) ${oldState.member?.id}, newstate: ${newState.channel?.name} (${newState.channel?.id}) ${newState.member?.displayName} (${newState.member?.displayName}) ${newState.member?.id}`
-    // )
     logger.debug(`VoiceStateUpdate event hit.`)
 
 
@@ -381,8 +369,8 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
-        // logger.error(
-        //     `Error: vcForCreate is null`)
+        logger.error(
+            `Error: vcForCreate is null`)
         return
     }
 

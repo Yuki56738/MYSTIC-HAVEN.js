@@ -1,9 +1,12 @@
 import {PrismaClient} from "@prisma/client";
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ChannelType,
-    Client,
+    Client, Collection,
     Events,
-    IntentsBitField,
+    IntentsBitField, Message,
     PermissionsBitField,
     SlashCommandBuilder,
     TextChannel,
@@ -57,14 +60,20 @@ const commandSetVC = new SlashCommandBuilder()
     .setDescription('ボイチャ作成用チャンネルの指定.')
     .addChannelOption(option => option.setName('voice_channel').setDescription('ボイチャ作成用チャンネル').setRequired(true)
         .addChannelTypes(ChannelType.GuildVoice))
-
+const commandDelmsgsbyuserid = new SlashCommandBuilder()
+    .setName('delmsgbyuserid')
+    .setDescription('指定されたIDを持つユーザーの投稿をすべて削除する。')
+    .addStringOption(option =>
+        option.setName('userid')
+            .setDescription('対象のユーザーのID')
+            .setRequired(true))
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
 commands.push(commandGetChannel.toJSON());
 commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 commands.push(commandSetVC.toJSON());
-
+commands.push(commandDelmsgsbyuserid.toJSON());
 
 client.on('ready', async () => {
     logger.info(`Logged in as: ${client.user?.tag}`)
@@ -89,10 +98,131 @@ client.on('ready', async () => {
 });
 
 
-
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
+    if (interaction.user.bot) return;
+    logger.debug(
+        `InteractionCreate event hit. by ${interaction.user.tag}: ${interaction.user.id}`
+    )
+    if (interaction.commandName === 'delmsgbyuserid') {
+        // const ctxrp = await interaction.deferReply()
+        if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+            await interaction.editReply('権限拒否.')
+            return
+        }
+        const option_userid = interaction.options.getString('userid')
+        console.log(option_userid)
+        const user1 = await interaction.guild?.members.fetch(option_userid!).catch(() => null);
 
+        console.log(user1)
+        // const channel = interaction.guild?.channels.cache.get(interaction.channelId)
+        // const channel: TextChannel = interaction.channel! as TextChannel
+        // await interaction.followUp(user?.displayName!)
+        // const select = new StringSelectMenuBuilder()
+        //     .setCustomId('really_delete_msg')
+        //     .setPlaceholder('選択してください...')
+        //     .addOptions(
+        //         new StringSelectMenuOptionBuilder()
+        //             .setLabel('yes')
+        //             .setDescription('実行する。')
+        //             .setValue('yes')
+        //     ),
+        //     new String
+        // const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+        //     .addComponents(select)
+
+        const yesButton = new ButtonBuilder()
+            .setCustomId('confirm_delete')
+            .setLabel('YES')
+            .setStyle(ButtonStyle.Danger);
+
+        const noButton = new ButtonBuilder()
+            .setCustomId('cancel_delete')
+            .setLabel('NO')
+            .setStyle(ButtonStyle.Secondary);
+
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(yesButton, noButton);
+
+        const res = await interaction.followUp({
+            content: `本当に、${user1?.displayName} (${user1?.nickname}) の全ての投稿を削除しますか？`,
+            components: [row],
+        });
+        const comfirmation = await res.awaitMessageComponent({
+            filter: i => i.user.id === interaction.user.id,
+            time: 60_000
+        })
+        if (comfirmation.customId === 'confirm_delete') {
+            await interaction.followUp('削除しています...')
+
+            if (user1 === undefined || user1 === null) {
+                await interaction.followUp('指定されたユーザーが見つかりません。');
+                return;
+            }
+
+            try {
+                const guild = interaction.guild;
+                if (!guild) {
+                    await interaction.followUp('ギルド情報が取得できません。');
+                    return;
+                }
+
+                await interaction.followUp('メッセージを削除しています…。この処理には時間がかかる場合があります。');
+
+                // Filter for text channels only
+                const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
+
+                for (const [, channel] of channels) {
+                    logger.debug(`Fetching messages from channel ${channel.name} (${channel.id})`);
+
+                    let lastMessageId: string | undefined = undefined;
+
+                    while (true) {
+                        // Fetch messages in batches of 100
+                        const messages_to_del = await channel.messages.fetch({
+                            limit: 100,
+                            ...(lastMessageId && {before: lastMessageId}),
+                        }) as Collection<string, Message>;
+
+                        if (messages_to_del.size === 0) break;
+
+                        // Filter messages by the user
+                        const userMessages = messages_to_del.filter(msg => msg.author.id === user1.id);
+
+                        for (const [, msg] of userMessages) {
+                            await msg.delete().catch(e => {
+                                logger.error(`Failed to delete message: ${e}`);
+                            });
+                        }
+
+                        // Update lastMessageId for pagination
+                        lastMessageId = messages_to_del.last()?.id;
+
+                        // Break the loop if fewer than 100 messages were fetched
+                        if (messages_to_del.size < 100) break;
+                    }
+                }
+
+                await interaction.followUp(`${user1.displayName ?? user1.nickname ?? user1.user.username} のメッセージを削除しました。`);
+            } catch (error) {
+                logger.error(`Error during message deletion: ${error}`);
+                await interaction.followUp('エラーが発生しました。メッセージを削除できませんでした。');
+            }
+            // const guildchannels = interaction.guild?.channels.fetch().then(async (channels) => {
+            //     // channels.forEach(async (channel) => {
+            //     //     if (channel!.type === ChannelType.GuildText) {
+            //     //         const msgs = await channel?.messages.fetch({limit: 1000});
+            //     //         console.log(msgs!.toString());
+            //     //     }
+            //     // })
+            //    
+            // })
+        }
+        // await interaction.followUp({
+        //     content: `本当に、${user?.displayName} (${user?.nickname}) の全ての投稿を削除しますか？`,
+        //     components: [row.toJSON()],
+        // })
+    }
     if (interaction.commandName === 'ping') {
         logger.debug(`Ping command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
@@ -231,7 +361,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
 
-    const oldstate_channel= await oldState.channel
+    const oldstate_channel = await oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {
         return
     }

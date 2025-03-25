@@ -115,21 +115,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const user1 = await interaction.guild?.members.fetch(option_userid!).catch(() => null);
 
         console.log(user1)
-        // const channel = interaction.guild?.channels.cache.get(interaction.channelId)
-        // const channel: TextChannel = interaction.channel! as TextChannel
-        // await interaction.followUp(user?.displayName!)
-        // const select = new StringSelectMenuBuilder()
-        //     .setCustomId('really_delete_msg')
-        //     .setPlaceholder('選択してください...')
-        //     .addOptions(
-        //         new StringSelectMenuOptionBuilder()
-        //             .setLabel('yes')
-        //             .setDescription('実行する。')
-        //             .setValue('yes')
-        //     ),
-        //     new String
-        // const row = new ActionRowBuilder<StringSelectMenuBuilder>()
-        //     .addComponents(select)
 
         const yesButton = new ButtonBuilder()
             .setCustomId('confirm_delete')

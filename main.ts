@@ -47,13 +47,13 @@ let commands = [];
 const commandPing = new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Replies with Pong!');
-const commandGetChannel = new SlashCommandBuilder()
-    .setName('getchannel')
-    .setDescription('募集版として設定されたチャンネルを確認する。');
-const commandSetChannelWithGUI = new SlashCommandBuilder()
-    .setName('setchannel')
-    .setDescription('募集版を設定します。')
-    .addChannelOption(option => option.setName('channel').setDescription('募集版').setRequired(true))
+// const commandGetChannel = new SlashCommandBuilder()
+//     .setName('getchannel')
+//     .setDescription('募集版として設定されたチャンネルを確認する。');
+// const commandSetChannelWithGUI = new SlashCommandBuilder()
+//     .setName('setchannel')
+//     .setDescription('募集版を設定します。')
+//     .addChannelOption(option => option.setName('channel').setDescription('募集版').setRequired(true))
 const commandDebug = new SlashCommandBuilder()
     .setName('debug')
     .setDescription('Debugs the bot.')
@@ -72,8 +72,8 @@ const commandDelmsgsbyuserid = new SlashCommandBuilder()
 
 commands.push(commandPing.toJSON());
 // commands.push(commandSetChannel.toJSON());
-commands.push(commandGetChannel.toJSON());
-commands.push(commandSetChannelWithGUI.toJSON());
+// commands.push(commandGetChannel.toJSON());
+// commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 commands.push(commandSetVC.toJSON());
 commands.push(commandDelmsgsbyuserid.toJSON());
@@ -333,6 +333,8 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
 
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
+
+
 
     const oldstate_channel = await oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {

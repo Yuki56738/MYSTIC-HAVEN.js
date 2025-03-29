@@ -97,9 +97,15 @@ client.on('ready', async () => {
     } else {
         logger.info('Production environment detected. Deploying commands to global....')
         await client.application?.commands.set(commands);
-        await client.application?.commands.delete('setchannel')
-        await client.application?.commands.delete('getchannel')
-        await client.application?.commands.delete('setchannelwithgui')
+        // await client.application?.commands.delete('setchannel')
+        // await client.application?.commands.delete('getchannel')
+        // await client.application?.commands.delete('setchannelwithgui')
+        await client.application?.commands.fetch().then(async (commands) => {
+            logger.debug(`Fetched ${commands.size} commands.`)
+            for (const command of commands.values()) {
+                logger.debug(`Command: ${command.name}`)
+            }
+        })
     }
 });
 

@@ -75,10 +75,6 @@ client.on('ready', async () => {
         logger.info(`- ${guild.name}`);
     })
     client.user?.setActivity('Created by Yuki.')
-    await prisma.$connect().catch(e => {
-        logger.debug(e.message)
-    })
-    await prisma.$disconnect().catch(e => {logger.debug(e.message)})
     if (process.env.TEST_GUILD_ID !== undefined) {
         logger.info('dev environment detected. Deploying commands to guild....')
         if (!TEST_GUILD_ID) {

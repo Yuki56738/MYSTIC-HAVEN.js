@@ -47,13 +47,6 @@ let commands = [];
 const commandPing = new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Replies with Pong!');
-// const commandGetChannel = new SlashCommandBuilder()
-//     .setName('getchannel')
-//     .setDescription('募集版として設定されたチャンネルを確認する。');
-// const commandSetChannelWithGUI = new SlashCommandBuilder()
-//     .setName('setchannel')
-//     .setDescription('募集版を設定します。')
-//     .addChannelOption(option => option.setName('channel').setDescription('募集版').setRequired(true))
 const commandDebug = new SlashCommandBuilder()
     .setName('debug')
     .setDescription('Debugs the bot.')
@@ -71,9 +64,6 @@ const commandDelmsgsbyuserid = new SlashCommandBuilder()
             .setRequired(true))
 
 commands.push(commandPing.toJSON());
-// commands.push(commandSetChannel.toJSON());
-// commands.push(commandGetChannel.toJSON());
-// commands.push(commandSetChannelWithGUI.toJSON());
 commands.push(commandDebug.toJSON());
 commands.push(commandSetVC.toJSON());
 commands.push(commandDelmsgsbyuserid.toJSON());
@@ -97,9 +87,6 @@ client.on('ready', async () => {
     } else {
         logger.info('Production environment detected. Deploying commands to global....')
         await client.application?.commands.set(commands);
-        // await client.application?.commands.delete('setchannel')
-        // await client.application?.commands.delete('getchannel')
-        // await client.application?.commands.delete('setchannelwithgui')
         await client.application?.commands.fetch().then(async (commands) => {
             logger.debug(`Fetched ${commands.size} commands.`)
             for (const command of commands.values()) {
@@ -217,78 +204,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
         return
     }
-    // if (interaction.commandName === 'getchannel') {
-    //     logger.debug(`getchannel command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
-    //     try {
-    //         await interaction.deferReply()
-    //         logger.info('Attempting to connect to database.')
-    //         const guildId = BigInt(interaction.guildId!);
-    //         const setting = await prisma.settings.findUnique({where: {guild_id: guildId}});
-    //
-    //         if (setting) {
-    //             const channelForNotify = setting.channel_for_wanted;
-    //             // @ts-ignore
-    //             const channelForNotifyObj = await client.channels.fetch(channelForNotify) as TextChannel
-    //             await interaction.editReply(`募集版は、 ${channelForNotifyObj.name} (${channelForNotifyObj.id}).`)
-    //             logger.debug(`Channel for notify: ${channelForNotifyObj.name} (${channelForNotifyObj.id})`);
-    //         } else {
-    //             logger.debug(`No setting found for guild ID ${guildId}`);
-    //             await interaction.editReply('このサーバーに設定がありません。')
-    //         }
-    //         await prisma.$disconnect()
-    //     } catch (e) {
-    //         logger.error(`Error: ${e}`)
-    //     }
-    //     return
-    //
-    // }
-    // if (interaction.commandName === 'setchannel') {
-    //     logger.debug(`setchannel command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
-    //     try {
-    //         await interaction.deferReply()
-    //         const logChannel = interaction.options.getChannel('channel')
-    //         const logChannelObj = await client.channels.fetch(logChannel!.id) as TextChannel
-    //         logger.debug(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})`)
-    //         await interaction.editReply(`logChannelObj: ${logChannelObj.name} (${logChannelObj.id})...`)
-    //         if (logChannel?.type !== ChannelType.GuildText) {
-    //             logger.error(`Error: Channel is not a text channel.`)
-    //             await interaction.followUp(`エラー。ボイスチャンネルは指定できません！`)
-    //             return
-    //         }
-    //         logger.debug(`Attempting to connect to database.`)
-    //         const guild = await client.guilds.fetch(interaction.guildId!)
-    //
-    //         const db_setting = await prisma.settings.findFirst({
-    //             where: {guild_id: BigInt(interaction.guildId!)}
-    //         })
-    //
-    //         if (db_setting) {
-    //             await prisma.settings.upsert({
-    //                 where: {guild_id: BigInt(guild.id!)},
-    //                 create: {
-    //                     guild_id: BigInt(guild.id!),
-    //                     guild_name: guild.name!,
-    //                     set_user_id: BigInt(interaction.user.id!),
-    //                     channel_for_wanted: logChannelObj.id,
-    //                     vc_for_create: '0'
-    //                 },
-    //                 update: {
-    //                     guild_id: BigInt(guild.id!),
-    //                     guild_name: guild.name!,
-    //                     set_user_id: BigInt(interaction.user.id!),
-    //                 }
-    //             })
-    //
-    //
-    //         }
-    //         await prisma.$disconnect()
-    //         await interaction.followUp(`募集版を ${logChannel.name} (${logChannel.id}) に設定しました。`)
-    //     } catch (e) {
-    //         logger.error(`Error: ${e}`)
-    //     }
-    //     return
-    //
-    // }
+
     if (interaction.commandName === 'setvc') {
         logger.debug(`setvc command hit. by ${interaction.user.tag}: ${interaction.user.id}`)
         try {
@@ -342,7 +258,6 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
 
     // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
-
 
 
     const oldstate_channel = await oldState.channel

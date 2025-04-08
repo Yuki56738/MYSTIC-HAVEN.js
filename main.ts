@@ -83,6 +83,12 @@ client.on('ready', async () => {
         }
         await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
             await guild.commands.set(commands);
+            if (guild.id === "965354369556049990"){
+                // const myUser =
+                const userOfThisBot = await guild.members.fetch(client.user?.id!)
+                const permsThisBot2 = await userOfThisBot.permissions
+                logger.debug(`perms: ${permsThisBot2.toArray().toString()}`)
+            }
         })
     } else {
         logger.info('Production environment detected. Deploying commands to global....')

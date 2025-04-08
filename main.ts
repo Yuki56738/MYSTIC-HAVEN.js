@@ -81,7 +81,7 @@ client.on('ready', async () => {
             logger.error('Error: TEST_GUILD_ID is undefined.');
             return
         }
-        await client.guilds.fetch(TEST_GUILD_ID!).then(async guild => {
+        await client.guilds.fetch("965354369556049990").then(async guild => {
             await guild.commands.set(commands);
             if (guild.id === "965354369556049990"){
                 // const myUser =

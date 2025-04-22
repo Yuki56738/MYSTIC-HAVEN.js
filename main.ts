@@ -6,7 +6,7 @@ import {
     ChannelType,
     Client,
     Collection,
-    Events,
+    Events, GuildMember,
     IntentsBitField,
     Message,
     PermissionsBitField,
@@ -22,15 +22,14 @@ import log4js from "log4js";
 dotenv.config()
 log4js.configure({
     appenders: {
-        console: {type: 'console'}, // コンソール出力
-        file: {type: 'file', filename: 'logs/bot.log'}, // ファイル出力 (オプション)
+        console: {type: 'console'},
+        file: {type: 'file', filename: 'logs/bot.log'},
     },
     categories: {
-        default: {appenders: ['console', 'file'], level: 'info'}, // デフォルトカテゴリ
+        default: {appenders: ['console', 'file'], level: 'info'},
     },
 });
 
-// ロガーのインスタンス作成
 const logger = log4js.getLogger();
 logger.level = 'debug';
 
@@ -83,23 +82,13 @@ client.on('ready', async () => {
         }
         await client.guilds.fetch("965354369556049990").then(async guild => {
             await guild.commands.set(commands);
-            if (guild.id === "965354369556049990"){
-                // const myUser =
-                const userOfThisBot = await guild.members.fetch(client.user?.id!)
-                const permsThisBot2 = await userOfThisBot.permissions
-                logger.debug(`perms: ${permsThisBot2.toArray().toString()}`)
+            if (guild.id === "965354369556049990") {
+                                const userOfThisBot = await guild.members.fetch(client.user?.id!)
+                const permsThisBot2 = userOfThisBot.permissions
+                logger.info(`perms: ${permsThisBot2.toArray().toString()}`)
             }
         })
-    } else {
-        logger.info('Production environment detected. Deploying commands to global....')
-        await client.application?.commands.set(commands);
-        await client.application?.commands.fetch().then(async (commands) => {
-            logger.debug(`Fetched ${commands.size} commands.`)
-            for (const command of commands.values()) {
-                logger.debug(`Command: ${command.name}`)
-            }
-        })
-    }
+                                                                                    }
 });
 
 
@@ -113,11 +102,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.deferReply()
         if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.editReply('権限拒否.')
+            logger.info(`*****${interaction.user.globalName} hit /delmsgbyuserid command but has no permission.******`)
             return
         }
         const option_userid = interaction.options.getString('userid')
         console.log(option_userid)
         const user1 = await interaction.guild?.members.fetch(option_userid!).catch(() => null);
+        if (user1 === undefined || user1 === null) {
+            await interaction.followUp('指定されたユーザーが見つかりません。');
+            return;
+        }
 
         console.log(user1)
 
@@ -143,6 +137,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             time: 60_000
         })
         if (comfirmation.customId === 'confirm_delete') {
+            logger.info(`${interaction.user.globalName} hit delete button.\n***Deleting ${user1.displayName} (${user1.id})'s messages.***`)
             await interaction.followUp('削除しています...')
 
             if (user1 === undefined || user1 === null) {
@@ -159,37 +154,32 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
                 await interaction.followUp('メッセージを削除しています…。この処理には時間がかかる場合があります。');
 
-                // Filter for text channels only
-                const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
+                                const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
 
                 for (const [, channel] of channels) {
-                    logger.debug(`Fetching messages from channel ${channel.name} (${channel.id})`);
+                    logger.info(`Fetching messages from channel ${channel.name} (${channel.id})`);
 
                     let lastMessageId: string | undefined = undefined;
 
                     while (true) {
-                        // Fetch messages in batches of 100
-                        const messages_to_del = await channel.messages.fetch({
+                                                const messages_to_del = await channel.messages.fetch({
                             limit: 100,
                             ...(lastMessageId && {before: lastMessageId}),
                         }) as Collection<string, Message>;
 
                         if (messages_to_del.size === 0) break;
 
-                        // Filter messages by the user
-                        const userMessages = messages_to_del.filter(msg => msg.author.id === user1.id);
+                                                const userMessages = messages_to_del.filter(msg => msg.author.id === user1.id);
 
                         for (const [, msg] of userMessages) {
-                            await msg.delete().catch(e => {
+                            await msg.delete().catch(async e => {
                                 logger.error(`Failed to delete message: ${e}`);
                             });
                         }
 
-                        // Update lastMessageId for pagination
-                        lastMessageId = messages_to_del.last()?.id;
+                                                lastMessageId = messages_to_del.last()?.id;
 
-                        // Break the loop if fewer than 100 messages were fetched
-                        if (messages_to_del.size < 100) break;
+                                                if (messages_to_del.size < 100) break;
                     }
                 }
 
@@ -228,8 +218,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
             logger.debug(`vc: ${vc?.id}`)
             logger.debug(`setvc: vc: ${vc?.name}: ${vc?.id}`)
-            // await interaction.editReply(`vc: ${vc?.toString()}`)
-            await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
+                        await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
 
             const guild = await client.guilds.fetch(interaction.guildId!)
             logger.debug('Attaching database...')
@@ -263,20 +252,17 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     logger.debug(`VoiceStateUpdate event hit.`)
 
 
-    // const CREATE_VC = process.env.CREATE_VC || '1316107393343553719'
-
+    
 
     const oldstate_channel = await oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {
         return
     }
-// if (client.channels.fetch(oldState.channelId))
     await prisma.vCS.findMany({
         select: {vc_id: true, id: true},
         where: {vc_id: oldState.channelId ?? undefined}
     }).then(async (vcs) => {
-        // vcs.filter(vcs => {if (vcs.vc_id === oldState.channelId)
-        oldState.channel?.fetch(false).then(async (channel) => {
+                oldState.channel?.fetch(false).then(async (channel) => {
             for (const vcs1 of vcs) {
                 if (channel.id === vcs1.vc_id) {
                     await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {
@@ -297,8 +283,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     })
 
-    //get VC for create new VC
-    const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
+        const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
         logger.error(
@@ -308,11 +293,9 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     if (newState.channelId === vcForCreate) {
         try {
-            // const member = newState.guild.members.cache.get(newState.member?.id!)
-            const member = newState.member
+                        const member = newState.member
             const createdChannel = await newState.guild?.channels.create({
-                name: member?.displayName!, // Set the desired name, defaulting to 'Voice Channel'
-                type: ChannelType.GuildVoice,
+                name: member?.displayName!,                 type: ChannelType.GuildVoice,
                 parent: newState.channel?.parent,
             })
             const createdChannelId = client.channels.cache.get(createdChannel.id)!.id

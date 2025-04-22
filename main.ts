@@ -6,7 +6,7 @@ import {
     ChannelType,
     Client,
     Collection,
-    Events, GuildMember,
+    Events,
     IntentsBitField,
     Message,
     PermissionsBitField,
@@ -83,12 +83,12 @@ client.on('ready', async () => {
         await client.guilds.fetch("965354369556049990").then(async guild => {
             await guild.commands.set(commands);
             if (guild.id === "965354369556049990") {
-                                const userOfThisBot = await guild.members.fetch(client.user?.id!)
+                const userOfThisBot = await guild.members.fetch(client.user?.id!)
                 const permsThisBot2 = userOfThisBot.permissions
                 logger.info(`perms: ${permsThisBot2.toArray().toString()}`)
             }
         })
-                                                                                    }
+    }
 });
 
 
@@ -154,7 +154,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
                 await interaction.followUp('メッセージを削除しています…。この処理には時間がかかる場合があります。');
 
-                                const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
+                const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
 
                 for (const [, channel] of channels) {
                     logger.info(`Fetching messages from channel ${channel.name} (${channel.id})`);
@@ -162,14 +162,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     let lastMessageId: string | undefined = undefined;
 
                     while (true) {
-                                                const messages_to_del = await channel.messages.fetch({
+                        const messages_to_del = await channel.messages.fetch({
                             limit: 100,
                             ...(lastMessageId && {before: lastMessageId}),
                         }) as Collection<string, Message>;
 
                         if (messages_to_del.size === 0) break;
 
-                                                const userMessages = messages_to_del.filter(msg => msg.author.id === user1.id);
+                        const userMessages = messages_to_del.filter(msg => msg.author.id === user1.id);
 
                         for (const [, msg] of userMessages) {
                             await msg.delete().catch(async e => {
@@ -177,9 +177,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
                             });
                         }
 
-                                                lastMessageId = messages_to_del.last()?.id;
+                        lastMessageId = messages_to_del.last()?.id;
 
-                                                if (messages_to_del.size < 100) break;
+                        if (messages_to_del.size < 100) break;
                     }
                 }
 
@@ -218,7 +218,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
             logger.debug(`vc: ${vc?.id}`)
             logger.debug(`setvc: vc: ${vc?.name}: ${vc?.id}`)
-                        await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
+            await interaction.editReply(`VC作成用チャンネルを、VC '${vc.name}'に設定しています...`)
 
             const guild = await client.guilds.fetch(interaction.guildId!)
             logger.debug('Attaching database...')
@@ -252,8 +252,6 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     logger.debug(`VoiceStateUpdate event hit.`)
 
 
-    
-
     const oldstate_channel = await oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {
         return
@@ -262,7 +260,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
         select: {vc_id: true, id: true},
         where: {vc_id: oldState.channelId ?? undefined}
     }).then(async (vcs) => {
-                oldState.channel?.fetch(false).then(async (channel) => {
+        oldState.channel?.fetch(false).then(async (channel) => {
             for (const vcs1 of vcs) {
                 if (channel.id === vcs1.vc_id) {
                     await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {
@@ -283,7 +281,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     })
 
-        const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
+    const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
         logger.error(
@@ -293,9 +291,9 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
     if (newState.channelId === vcForCreate) {
         try {
-                        const member = newState.member
+            const member = newState.member
             const createdChannel = await newState.guild?.channels.create({
-                name: member?.displayName!,                 type: ChannelType.GuildVoice,
+                name: member?.displayName!, type: ChannelType.GuildVoice,
                 parent: newState.channel?.parent,
             })
             const createdChannelId = client.channels.cache.get(createdChannel.id)!.id

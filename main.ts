@@ -80,14 +80,14 @@ client.on('ready', async () => {
             logger.error('Error: TEST_GUILD_ID is undefined.');
             return
         }
-        await client.guilds.fetch("965354369556049990").then(async guild => {
-            await guild.commands.set(commands);
-            if (guild.id === "965354369556049990") {
-                const userOfThisBot = await guild.members.fetch(client.user?.id!)
-                const permsThisBot2 = userOfThisBot.permissions
-                logger.info(`perms: ${permsThisBot2.toArray().toString()}`)
-            }
-        })
+        // await client.guilds.fetch("965354369556049990").then(async guild => {
+        //     await guild.commands.set(commands);
+        //     if (guild.id === "965354369556049990") {
+        //         const userOfThisBot = await guild.members.fetch(client.user?.id!)
+        //         const permsThisBot2 = userOfThisBot.permissions
+        //         logger.info(`perms: ${permsThisBot2.toArray().toString()}`)
+        //     }
+        // })
     }
 });
 
@@ -252,22 +252,23 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
     logger.debug(`VoiceStateUpdate event hit.`)
 
 
-    const oldstate_channel = await oldState.channel
+    const oldstate_channel = oldState.channel
     if (oldstate_channel?.members.size! >= Number(1)) {
         return
     }
     await prisma.vCS.findMany({
         select: {vc_id: true, id: true},
-        where: {vc_id: oldState.channelId ?? undefined}
+        where: {vc_id: oldstate_channel?.id ?? undefined}
     }).then(async (vcs) => {
-        oldState.channel?.fetch(false).then(async (channel) => {
+        oldstate_channel?.fetch(false).then(async (channel) => {
             for (const vcs1 of vcs) {
                 if (channel.id === vcs1.vc_id) {
-                    await channel!.delete('voice channel deleted by bot: temporary voice channel.').catch(e => {
+                    try {
+                        await channel!.delete('voice channel deleted by bot: temporary voice channel.')
+                        logger.debug(`deleted vc: ${oldState.channelId}: ${oldState.channel?.name}`)
+                    } catch (e) {
                         logger.error(e)
-                    })
-                    logger.debug(`deleted vc: ${oldState.channelId}: ${oldState.channel?.name}`)
-
+                    }
                 }
                 await prisma.vCS.delete({
                     where: {id: vcs1.id}
@@ -296,8 +297,8 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                 name: member?.displayName!, type: ChannelType.GuildVoice,
                 parent: newState.channel?.parent,
             })
-            const createdChannelId = client.channels.cache.get(createdChannel.id)!.id
-            await newState.member?.fetch(false).then(async (member) => {
+            const createdChannelId = createdChannel.id
+            await member?.fetch(false).then(async (member) => {
                 await member.voice.setChannel(createdChannel)
             })
             logger.debug(`created vc: ${createdChannel.id}: ${createdChannel.name}`)

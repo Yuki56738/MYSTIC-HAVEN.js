@@ -80,14 +80,6 @@ client.on('ready', async () => {
             logger.error('Error: TEST_GUILD_ID is undefined.');
             return
         }
-        // await client.guilds.fetch("965354369556049990").then(async guild => {
-        //     await guild.commands.set(commands);
-        //     if (guild.id === "965354369556049990") {
-        //         const userOfThisBot = await guild.members.fetch(client.user?.id!)
-        //         const permsThisBot2 = userOfThisBot.permissions
-        //         logger.info(`perms: ${permsThisBot2.toArray().toString()}`)
-        //     }
-        // })
     }
 });
 
@@ -95,25 +87,21 @@ client.on('ready', async () => {
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.user.bot) return;
-    logger.debug(
-        `InteractionCreate event hit. by ${interaction.user.tag}: ${interaction.user.id}`
-    )
+
     if (interaction.commandName === 'delmsgbyuserid') {
         await interaction.deferReply()
         if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.editReply('権限拒否.')
-            logger.info(`*****${interaction.user.globalName} hit /delmsgbyuserid command but has no permission.******`)
+            logger.warn(`*****${interaction.user.globalName} hit /delmsgbyuserid command but has no permission.******`)
             return
         }
         const option_userid = interaction.options.getString('userid')
-        console.log(option_userid)
+        // console.log(option_userid)
         const user1 = await interaction.guild?.members.fetch(option_userid!).catch(() => null);
         if (user1 === undefined || user1 === null) {
             await interaction.followUp('指定されたユーザーが見つかりません。');
             return;
         }
-
-        console.log(user1)
 
         const yesButton = new ButtonBuilder()
             .setCustomId('confirm_delete')
@@ -140,11 +128,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
             logger.info(`${interaction.user.globalName} hit delete button.\n***Deleting ${user1.displayName} (${user1.id})'s messages.***`)
             await interaction.followUp('削除しています...')
 
-            if (user1 === undefined || user1 === null) {
-                await interaction.followUp('指定されたユーザーが見つかりません。');
-                return;
-            }
-
             try {
                 const guild = interaction.guild;
                 if (!guild) {
@@ -157,7 +140,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 const channels = guild.channels.cache.filter(channel => channel.type === ChannelType.GuildText) as Map<string, TextChannel>;
 
                 for (const [, channel] of channels) {
-                    logger.info(`Fetching messages from channel ${channel.name} (${channel.id})`);
+                    // logger.debug(`Fetching messages from channel ${channel.name} (${channel.id})`);
 
                     let lastMessageId: string | undefined = undefined;
 

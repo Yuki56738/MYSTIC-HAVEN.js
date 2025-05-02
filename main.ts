@@ -23,15 +23,19 @@ dotenv.config()
 log4js.configure({
     appenders: {
         console: {type: 'console'},
-        file: {type: 'file', filename: 'logs/bot.log'},
+        debugFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-debug.log'},
+        infoFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-info.log'},
     },
     categories: {
-        default: {appenders: ['console', 'file'], level: 'info'},
+        default: {appenders: ['console', 'debugFile', 'infoFile'], level: 'debug'},
+        console: {appenders: ['console'], level: 'info'},
+        info: {appenders: ['infoFile'], level: 'info'},
     },
 });
 
 const logger = log4js.getLogger();
-logger.level = 'debug';
+logger.info("log level is debug.")
+
 
 const prisma = new PrismaClient()
 

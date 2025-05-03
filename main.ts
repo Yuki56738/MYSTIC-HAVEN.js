@@ -23,15 +23,18 @@ dotenv.config()
 log4js.configure({
     appenders: {
         console: {type: 'console'},
-        file: {type: 'file', filename: 'logs/bot.log'},
+        debugFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-debug.log'},
+        infoFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-info.log'},
     },
     categories: {
-        default: {appenders: ['console', 'file'], level: 'info'},
+        default: {appenders: ['console', 'debugFile'], level: 'debug'},
+        console: {appenders: ['console'], level: 'debug'},
+        infoFile: {appenders: ['infoFile'], level: 'info'},
     },
 });
 
 const logger = log4js.getLogger();
-logger.level = 'debug';
+
 
 const prisma = new PrismaClient()
 
@@ -221,6 +224,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     channel_for_wanted: '0',
                 }
             })
+            await prisma.$disconnect()
             return
         } catch (e) {
             logger.error(
@@ -232,7 +236,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 })
 
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    logger.debug(`VoiceStateUpdate event hit.`)
+    // logger.debug(`VoiceStateUpdate event hit.`)
 
 
     const oldstate_channel = oldState.channel
@@ -258,17 +262,23 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                 }).catch(e => {
                     logger.error(e)
                 })
+                await prisma.$disconnect()
                 logger.debug(`deleted vc from db: ${vcs1.vc_id}`)
             }
 
         })
 
+    }).catch(reportError => {
+        logger.error(
+            `Error: ${reportError}`
+        )
+        return
     })
 
     const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
-        logger.error(
+        logger.debug(
             `Error: vcForCreate is null`)
         return
     }

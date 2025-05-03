@@ -27,14 +27,15 @@ log4js.configure({
         infoFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-info.log'},
     },
     categories: {
-        default: {appenders: ['console', 'debugFile', 'infoFile'], level: 'debug'},
-        console: {appenders: ['console'], level: 'info'},
-        info: {appenders: ['infoFile'], level: 'info'},
+        // default: {appenders: ['console', 'debugFile'], level: 'debug'},
+        default: {appenders: ['console', 'debugFile'], level: 'info'},
+        console: {appenders: ['console'], level: 'debug'},
+        infoFile: {appenders: ['infoFile'], level: 'info'},
     },
 });
 
 const logger = log4js.getLogger();
-logger.info("log level is debug.")
+// logger.info("log level is debug.")
 
 
 const prisma = new PrismaClient()

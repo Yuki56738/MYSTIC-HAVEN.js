@@ -224,6 +224,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     channel_for_wanted: '0',
                 }
             })
+            await prisma.$disconnect()
             return
         } catch (e) {
             logger.error(
@@ -261,6 +262,7 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
                 }).catch(e => {
                     logger.error(e)
                 })
+                await prisma.$disconnect()
                 logger.debug(`deleted vc from db: ${vcs1.vc_id}`)
             }
 

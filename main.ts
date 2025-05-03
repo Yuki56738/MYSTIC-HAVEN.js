@@ -27,15 +27,13 @@ log4js.configure({
         infoFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-info.log'},
     },
     categories: {
-        // default: {appenders: ['console', 'debugFile'], level: 'debug'},
-        default: {appenders: ['console', 'debugFile'], level: 'info'},
+        default: {appenders: ['console', 'debugFile'], level: 'debug'},
         console: {appenders: ['console'], level: 'debug'},
         infoFile: {appenders: ['infoFile'], level: 'info'},
     },
 });
 
 const logger = log4js.getLogger();
-// logger.info("log level is debug.")
 
 
 const prisma = new PrismaClient()
@@ -237,7 +235,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 })
 
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    logger.debug(`VoiceStateUpdate event hit.`)
+    // logger.debug(`VoiceStateUpdate event hit.`)
 
 
     const oldstate_channel = oldState.channel
@@ -268,12 +266,17 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
 
         })
 
+    }).catch(reportError => {
+        logger.error(
+            `Error: ${reportError}`
+        )
+        return
     })
 
     const db_settings = await prisma.settings.findUnique({where: {guild_id: BigInt(newState.guild.id)}})
     const vcForCreate = db_settings?.vc_for_create ?? null;
     if (vcForCreate === null) {
-        logger.error(
+        logger.debug(
             `Error: vcForCreate is null`)
         return
     }

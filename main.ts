@@ -23,8 +23,8 @@ dotenv.config()
 log4js.configure({
     appenders: {
         console: {type: 'console'},
-        debugFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-debug.log'},
-        infoFile: {type: 'file', filename: '/vol1/logs/mystic-haven.js/bot-info.log'},
+        debugFile: {type: 'file', filename: './bot-debug.log'},
+        infoFile: {type: 'file', filename: './bot-info.log'},
     },
     categories: {
         default: {appenders: ['console', 'debugFile'], level: 'debug'},
